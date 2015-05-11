@@ -27,12 +27,6 @@ import org.xml.sax.SAXException;
 public class XmlMerger {
 	
 	Document document;
-	boolean print = true;
-	
-	public XmlMerger() {};
-	public XmlMerger(boolean print) {
-		this.print = print;
-	}
 
 	/**
 	 * Gets the last node with the specified tag name.
@@ -74,15 +68,13 @@ public class XmlMerger {
 	 * @param nodeToMerge		a String that specifies the name of the nodes that should be copied from the old file to the new one.
 	 * @param nodeCount			an Integer: Use 0 as default. If your source XML-files have nested nodes with the same name, use this to specify which node to take. 
 	 */
-	public boolean mergeElementNodes(String sourceDirectory, String destinationFile, String parentNode, String nodeToMerge, int nodeCount) {
-		boolean isSuccess = false;
-		print("Started merging element nodes, please wait ...");
+	public void mergeElementNodes(String sourceDirectory, String destinationFile, String parentNode, String nodeToMerge, int nodeCount) {
+		System.out.println("Started merging element nodes, please wait ...");
 		File fSourceDirectory = new File(sourceDirectory);
 		File fDestinationFile = new File(destinationFile);
 		if (fSourceDirectory.getAbsolutePath().equals(fDestinationFile.getParent())) {
-			print("WARNING: Stopped merging process.\nIt's not possible to save the destination file in the source directory. Please specify another path for your destination file!");
-			isSuccess = false;
-			return isSuccess;
+			System.out.println(Color.YELLOW + "WARNING: Stopped merging process.\nIt's not possible to save the destination file in the source directory. Please specify another path for your destination file!"  + Color.RESET);
+			return;
 		}
 		
 		try {
@@ -99,15 +91,13 @@ public class XmlMerger {
 			
 			if (writer!=null) { writer.close(); }
 			
-			isSuccess = true;
-			print("Merging done!");
-			
+			System.out.println("Merging done!");
 		} catch (FileNotFoundException e) {
+			System.out.print(Color.RED);
 			e.printStackTrace();
-			isSuccess = false;
+			System.out.print(Color.RESET);
 		}
 		
-		return isSuccess;
 		
 	}
 	
@@ -130,7 +120,9 @@ public class XmlMerger {
 			transformer.transform(new DOMSource(node), new StreamResult(stringWriter));
 			xmlString = stringWriter.toString();
 		} catch (TransformerException e) {
+			System.out.print(Color.RED);
 			e.printStackTrace();
+			System.out.print(Color.RESET);
 		}
 		return xmlString;
 	}
@@ -147,16 +139,12 @@ public class XmlMerger {
 			doc = dBuilder.parse(xmlFile);
 			doc.getDocumentElement().normalize();
 		} catch (SAXException | IOException | ParserConfigurationException e) {
+			System.out.print(Color.RED);
 			e.printStackTrace();
+			System.out.print(Color.RESET);
 		}
 		
 		return doc;
-	}
-	
-	private void print(String text) {
-		if (print) {
-			System.out.println(text);
-		}
 	}
 
 }

@@ -150,28 +150,5 @@ public class XmlParser {
 
 		return attributeValues;
 	}
-	
-	/**
-	 * Counts the elements of the given xpath expression.
-	 * 
-	 * @param document		the xml document that contains the elements
-	 * @param xpath			the xpath which leads to the elements that should be counted
-	 * @return int			an Integer
-	 */
-	public int countXmlElements (Document document, String xpath) {
-		int noteCount = 0;
-		XPath xPath = XPathFactory.newInstance().newXPath();
-		XPathExpression xPathExpression;
-		
-		try {
-			xPathExpression = xPath.compile(xpath);
-			NodeList nodeList = (NodeList)xPathExpression.evaluate(document, XPathConstants.NODESET);
-			noteCount = nodeList.getLength();
-		} catch (XPathExpressionException e) {
-			e.printStackTrace();
-		}
-		
-		return noteCount;
-	}
 
 }

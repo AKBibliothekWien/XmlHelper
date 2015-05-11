@@ -14,12 +14,6 @@ import org.xml.sax.helpers.XMLReaderFactory;
 
 public class XmlValidator {
 
-	boolean print = true;
-	
-	public XmlValidator() {};
-	public XmlValidator(boolean print) {
-		this.print = print;
-	}
 
 	public boolean validateXML(String xmlFile)  {
 		boolean returnValue = false;
@@ -85,7 +79,7 @@ public class XmlValidator {
 		@Override
 		public void endElement(String uri, String localName, String qName) throws SAXException {
 			if (isSYS == true) {
-				print("Validating SYS-No.: " + nodeContent + "\r");
+				System.out.print("Validating SYS-No: " + nodeContent + "\r");
 			}
 		}
 
@@ -115,12 +109,6 @@ public class XmlValidator {
 		@Override
 		public void skippedEntity(String name) throws SAXException { }
 
-	}
-	
-	private void print(String text) {
-		if (print) {
-			System.out.println(text);
-		}
 	}
 
 }
