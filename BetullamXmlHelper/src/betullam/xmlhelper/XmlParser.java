@@ -151,4 +151,22 @@ public class XmlParser {
 		return attributeValues;
 	}
 
+	/**
+	 * Gets the number of nods of the given xPath expression. 
+	 * 
+	 * @param document						the xml document that nodes to count
+	 * @param xpath							the xpath which leads to the elements in the XML document that should be counted
+	 * @return int							an int that indicates how many nodes were counted
+	 * @throws XPathExpressionException
+	 */
+	public int countNodes(Document document, String xpath) throws XPathExpressionException {
+		int noOfNodes = 0;
+
+		XPathExpression xPathExpression = xPath.compile(xpath);
+		NodeList nodeList = (NodeList)xPathExpression.evaluate(document, XPathConstants.NODESET);
+		noOfNodes = nodeList.getLength();
+
+		return noOfNodes;
+	}
+
 }
