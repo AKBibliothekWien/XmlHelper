@@ -68,13 +68,14 @@ public class XmlMerger {
 	 * @param nodeToMerge		a String that specifies the name of the nodes that should be copied from the old file to the new one.
 	 * @param nodeCount			an Integer: Use 0 as default. If your source XML-files have nested nodes with the same name, use this to specify which node to take. 
 	 */
-	public void mergeElementNodes(String sourceDirectory, String destinationFile, String parentNode, String nodeToMerge, int nodeCount) {
+	public boolean mergeElementNodes(String sourceDirectory, String destinationFile, String parentNode, String nodeToMerge, int nodeCount) {
+		boolean isMergingSuccessful = false;
 		System.out.println("Started merging element nodes, please wait ...");
 		File fSourceDirectory = new File(sourceDirectory);
 		File fDestinationFile = new File(destinationFile);
 		if (fSourceDirectory.getAbsolutePath().equals(fDestinationFile.getParent())) {
-			System.out.println(Color.YELLOW + "WARNING: Stopped merging process.\nIt's not possible to save the destination file in the source directory. Please specify another path for your destination file!"  + Color.RESET);
-			return;
+			System.out.println("WARNING: Stopped merging process.\nIt's not possible to save the destination file in the source directory. Please specify another path for your destination file!");
+			return isMergingSuccessful;
 		}
 		
 		try {
@@ -90,14 +91,14 @@ public class XmlMerger {
 			writer.println("</" + parentNode + ">");
 			
 			if (writer!=null) { writer.close(); }
-			
+			isMergingSuccessful = true;
 			System.out.println("Merging done!");
 		} catch (FileNotFoundException e) {
-			System.out.print(Color.RED);
+			isMergingSuccessful = false;
 			e.printStackTrace();
-			System.out.print(Color.RESET);
 		}
 		
+		return isMergingSuccessful;
 		
 	}
 	
