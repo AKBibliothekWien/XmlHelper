@@ -121,9 +121,7 @@ public class XmlMerger {
 			transformer.transform(new DOMSource(node), new StreamResult(stringWriter));
 			xmlString = stringWriter.toString();
 		} catch (TransformerException e) {
-			System.out.print(Color.RED);
 			e.printStackTrace();
-			System.out.print(Color.RESET);
 		}
 		return xmlString;
 	}
