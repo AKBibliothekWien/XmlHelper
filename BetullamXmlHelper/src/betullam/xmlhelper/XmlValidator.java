@@ -56,6 +56,7 @@ public class XmlValidator {
 
 		private String nodeContent;
 		private boolean isSYS;
+		private int elementCounter = 0;
 
 
 		@Override
@@ -77,9 +78,10 @@ public class XmlValidator {
 		}
 
 		@Override
-		public void endElement(String uri, String localName, String qName) throws SAXException {
+		public void endElement(String uri, String localName, String qName) throws SAXException {		
 			if (isSYS == true) {
-				System.out.print("Validating SYS-No: " + nodeContent + "\r");
+				elementCounter = elementCounter + 1;
+				System.out.print("Validating SYS-No: " + nodeContent + ". Records processed: " + elementCounter + "\r");
 			}
 		}
 

@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.Arrays;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -40,10 +41,12 @@ public class XmlMerger {
 		return returnNode;
 	}
 	
+	// TODO: Merge ALL nodes of an XML file (see example code below), not only the first one that is found.
+	// But it could be a problem with nested nodes (nodeCount).
 	/**
-	 * Gets the node with the specified tag name. If there are multiple nodes with the same tag name,
+	 * Gets the node with the specified tag name. If there are nested nodes with the same tag name,
 	 * use nodeCount to specify which node to take (starting with 0). If only one node exists with the
-	 * specified tag name, set nodeCount to 0.
+	 * specified tag name, set nodeCount to 0. ATTENTION: This will only merge 1 node per XML file!
 	 * @param tagName		a String with the tag name.
 	 * @param nodeCount 	an Integer with the number of the node
 	 * @return
@@ -54,7 +57,25 @@ public class XmlMerger {
 		returnNode = recordNodes.item(nodeCount);
 		return returnNode;
 	}
+	
+	
+	/*
+	// MERGES MULTIPLE NODES PER XML FILE - PROBLEM WITH nodeCount!
+	public List<Node> getElementNode(String tagName, int nodeCount) {
+		List<Node> returnNodeList = new ArrayList<Node>();
+		NodeList recordNodes = document.getElementsByTagName(tagName);
+		
+		int noOfElements = recordNodes.getLength();
+		
+		for (int i = 0; i < noOfElements; i++) {
+			Node currentNode = recordNodes.item(i);
+			returnNodeList.add(currentNode);
+			
+		}
 
+		return returnNodeList;
+	}
+	*/
 
 	/**
 	 * Checks a source directory for multiple XML files that should be merged togehter into one XML file. You may specify which nodes to copy from
@@ -82,17 +103,29 @@ public class XmlMerger {
 			OutputStream out = new BufferedOutputStream(new FileOutputStream(fDestinationFile.getAbsolutePath()));
 			PrintWriter writer = new PrintWriter(out);
 			
+			int counter = 0;
 			writer.println("<" + parentNode + ">");
-			for (File xmlFile : fSourceDirectory.listFiles()) {
+			File[] files = fSourceDirectory.listFiles();
+			Arrays.sort(files);
+			for (File xmlFile : files) {
+				
 				this.setDocument(xmlFile.getAbsolutePath());
 				Node elementNode = this.getElementNode(nodeToMerge, nodeCount);
 				writer.println(nodeToString(elementNode));
+				
+				/*
+				List<Node> elementNodeList = this.getElementNode(nodeToMerge, nodeCount);
+				for (Node elementNode : elementNodeList) {
+					counter = counter + 1;
+					writer.println(nodeToString(elementNode));
+				}
+				*/
 			}
 			writer.println("</" + parentNode + ">");
 			
 			if (writer!=null) { writer.close(); }
 			isMergingSuccessful = true;
-			System.out.println("Merging done!");
+			System.out.println("Merging done! Merged " + counter + " elements.");
 		} catch (FileNotFoundException e) {
 			isMergingSuccessful = false;
 			e.printStackTrace();
