@@ -91,7 +91,7 @@ public class XmlMerger {
 	 */
 	public boolean mergeElementNodes(String sourceDirectory, String destinationFile, String parentNode, String nodeToMerge, int nodeCount) {
 		boolean isMergingSuccessful = false;
-		System.out.println("Started merging element nodes, please wait ...");
+		//System.out.println("Started merging element nodes, please wait ...");
 		File fSourceDirectory = new File(sourceDirectory);
 		File fDestinationFile = new File(destinationFile);
 		if (fSourceDirectory.getAbsolutePath().equals(fDestinationFile.getParent())) {
@@ -103,7 +103,7 @@ public class XmlMerger {
 			OutputStream out = new BufferedOutputStream(new FileOutputStream(fDestinationFile.getAbsolutePath()));
 			PrintWriter writer = new PrintWriter(out);
 			
-			int counter = 0;
+			//int counter = 0;
 			writer.println("<" + parentNode + ">");
 			File[] files = fSourceDirectory.listFiles();
 			Arrays.sort(files);
@@ -125,7 +125,7 @@ public class XmlMerger {
 			
 			if (writer!=null) { writer.close(); }
 			isMergingSuccessful = true;
-			System.out.println("Merging done! Merged " + counter + " elements.");
+			//System.out.println("Merging done!");
 		} catch (FileNotFoundException e) {
 			isMergingSuccessful = false;
 			e.printStackTrace();
@@ -171,9 +171,7 @@ public class XmlMerger {
 			doc = dBuilder.parse(xmlFile);
 			doc.getDocumentElement().normalize();
 		} catch (SAXException | IOException | ParserConfigurationException e) {
-			System.out.print(Color.RED);
 			e.printStackTrace();
-			System.out.print(Color.RESET);
 		}
 		
 		return doc;

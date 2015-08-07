@@ -54,14 +54,14 @@ public class XmlValidator {
 	// Inner class for ContentHandler of XML-Parser:
 	private class ValidationContentHandler implements ContentHandler {
 
-		private String nodeContent;
+		//private String nodeContent;
 		private boolean isSYS;
 		private int elementCounter = 0;
 
 
 		@Override
 		public void startElement(String uri, String localName, String qName, Attributes attribs) throws SAXException {
-			nodeContent = "";
+			//nodeContent = "";
 
 			isSYS = false;
 
@@ -74,14 +74,14 @@ public class XmlValidator {
 		@Override
 		public void characters(char[] ch, int start, int length) throws SAXException {
 			// Reads the content of the current XML-node:
-			nodeContent += new String(ch, start, length);	
+			//nodeContent += new String(ch, start, length);	
 		}
 
 		@Override
 		public void endElement(String uri, String localName, String qName) throws SAXException {		
 			if (isSYS == true) {
 				elementCounter = elementCounter + 1;
-				System.out.print("Validating SYS-No: " + nodeContent + ". Records processed: " + elementCounter + "\r");
+				//System.out.print("Validating SYS-No: " + nodeContent + ". Records processed: " + elementCounter + "\r");
 			}
 		}
 
