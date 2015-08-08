@@ -30,7 +30,7 @@ public class XmlValidator {
 			xmlReader.parse(inputSource);
 
 			// End of parsing:
-			//System.out.println("XML file is OK!");
+			//System.out.println("XML file is OK!"); 
 			returnValue = true;
 		} catch (SAXException e) {
 			returnValue = false;
