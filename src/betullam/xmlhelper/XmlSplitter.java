@@ -19,7 +19,23 @@ import org.xml.sax.helpers.XMLReaderFactory;
 
 public class XmlSplitter {
 
-	public void split(String sourceFile, String destinationDirectory, String nodeNametoExtract, int nodeCount, String condNodeForFilename, Map<String, String> condAttrsForFilename) {
+	private String systemTempDirPath = System.getProperty("java.io.tmpdir");
+	private String tempDirPath = systemTempDirPath + File.separator + "xmlSplitted";
+	private File destinationDirectory = null;
+
+	public XmlSplitter(String destinationDirectoryPath) {
+		// Create destination directory. If destinationDirectoryPath is null, we use temp directory of OS:
+		if (destinationDirectoryPath == null || destinationDirectoryPath.isEmpty()) {
+			this.destinationDirectory = new File(tempDirPath);
+		} else {
+			this.destinationDirectory = new File(destinationDirectoryPath);
+		}
+		if (!this.destinationDirectory.exists()) {
+			this.destinationDirectory.mkdir();
+		}
+	}
+
+	public void split(String sourceFile, String nodeNametoExtract, int nodeCount, String condNodeForFilename, Map<String, String> condAttrsForFilename) {
 
 		try {
 			// Specify XML-file to parse
@@ -28,7 +44,7 @@ public class XmlSplitter {
 
 			// Create SAX parser:
 			XMLReader xmlReader = XMLReaderFactory.createXMLReader();
-			SplitterContentHandler cch = new SplitterContentHandler(destinationDirectory, nodeNametoExtract, nodeCount, condNodeForFilename, condAttrsForFilename);
+			SplitterContentHandler cch = new SplitterContentHandler(this.destinationDirectory, nodeNametoExtract, nodeCount, condNodeForFilename, condAttrsForFilename);
 			xmlReader.setContentHandler(cch);
 			xmlReader.parse(inputSource);
 			reader.close();
@@ -40,6 +56,10 @@ public class XmlSplitter {
 			e.printStackTrace();
 		}
 
+	}
+
+	public File getDestinationDirectory() {
+		return this.destinationDirectory;
 	}
 
 
@@ -54,30 +74,33 @@ public class XmlSplitter {
 		private boolean isRequestedElement = false;
 		private String textContent;
 		private String element = "";
-		private String systemTempDirPath = System.getProperty("java.io.tmpdir");
-		private String tempDirPath = systemTempDirPath + File.separator + "xmlSplitted";
+		//private String systemTempDirPath = System.getProperty("java.io.tmpdir");
+		//private String tempDirPath = systemTempDirPath + File.separator + "xmlSplitted";
 		private File destinationDirectory = null;
 		private boolean isFilenameNode = false;
 		private String fileName = "";
 		private FileWriter fileWriter = null;
 
 
-		private SplitterContentHandler(String destinationDirectoryPath, String nodeNameToExtract, int nodeCount, String fileNameNode, Map<String, String> fileNameAttrs) {
+		private SplitterContentHandler(File destinationDirectory, String nodeNameToExtract, int nodeCount, String fileNameNode, Map<String, String> fileNameAttrs) {
+			this.destinationDirectory = destinationDirectory;
 			this.nodeNameToExtract = nodeNameToExtract;
 			this.nodeCount = nodeCount;
 			this.fileNameNode = fileNameNode;
 			this.fileNameAttrs = fileNameAttrs;
-			
+
+			/*
 			// Create destination directory. If destinationDirectoryPath is null, we use temp directory of OS:
 			if (destinationDirectoryPath == null || destinationDirectoryPath.isEmpty()) {
 				this.destinationDirectory = new File(tempDirPath);
 			} else {
 				this.destinationDirectory = new File(destinationDirectoryPath);
 			}
-			
+
 			if (!this.destinationDirectory.exists()) {
 				this.destinationDirectory.mkdir();
 			}
+			 */
 		}
 
 		@Override
@@ -99,7 +122,7 @@ public class XmlSplitter {
 		public void startElement(String uri, String localName, String qName, Attributes attrs) throws SAXException {
 
 			this.textContent = "";
-			
+
 			if (localName.equals(this.nodeNameToExtract)) {
 				this.counter = this.counter + 1;
 			}
@@ -163,22 +186,22 @@ public class XmlSplitter {
 			if (isFilenameNode) {
 				this.fileName = this.textContent.replaceAll("\\W", "").trim(); // Remove all characters that are not A-Z, a-z or 0-9 for filename
 			}
-			
+
 			if ((localName.equals(this.nodeNameToExtract) || this.isRequestedElement == true) && this.counter >= this.nodeCount) {
-				
+
 				// Add text content
 				this.element += this.escapeXml(this.textContent.trim());
-				
+
 				// Reset text content string - MUST!
 				this.textContent = "";
-				
+
 				// Add closing tag:
 				String elementName = localName;
 				if ("".equals(elementName)) {
 					elementName = qName;
 				}
 				this.element += "</" + elementName + ">";
-				
+
 			}
 
 			if (localName.equals(this.nodeNameToExtract)) {
@@ -193,7 +216,7 @@ public class XmlSplitter {
 						this.element = this.element.replaceAll("\\>\\s+\\<", "><"); // Remove whitespaces between XML tags
 						//System.out.println(this.element); // Final single element
 
-						
+
 						if ((this.fileName != null && !this.fileName.isEmpty()) && this.destinationDirectory.exists()) {
 							try {
 								// Create file for final single element
@@ -212,7 +235,7 @@ public class XmlSplitter {
 					this.fileName = "";  // Reset filename String
 				}
 			}
-				
+
 		}
 
 		@Override
