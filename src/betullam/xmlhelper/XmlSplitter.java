@@ -190,7 +190,7 @@ public class XmlSplitter {
 			if ((localName.equals(this.nodeNameToExtract) || this.isRequestedElement == true) && this.counter >= this.nodeCount) {
 
 				// Add text content
-				this.element += this.escapeXml(this.textContent.trim());
+				this.element += this.escapeXml(unescapeXml(this.textContent.trim()));
 
 				// Reset text content string - MUST!
 				this.textContent = "";
@@ -256,7 +256,13 @@ public class XmlSplitter {
 
 		private String escapeXml(String string) {
 			// Escape characters that are not allowed in XML:
-			return string.replaceAll("\"", "&quot;").replaceAll("\'", "&apos;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+			return string.replaceAll("&", "&amp;").replaceAll("\"", "&quot;").replaceAll("\'", "&apos;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+		}
+		
+		private String unescapeXml(String string) {
+			// Unescape escaped characters:
+			return string.replaceAll("&amp;", "&").replaceAll("&quot;", "\"").replaceAll("&apos;", "\'").replaceAll("&lt;", "<").replaceAll("&gt;", ">");
+
 		}
 	}
 }
