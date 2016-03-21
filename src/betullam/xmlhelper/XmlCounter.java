@@ -37,6 +37,7 @@ public class XmlCounter {
 			xmlReader.setContentHandler(cch);
 			xmlReader.parse(inputSource);
 			noOfElements = cch.getNoOfElements();
+			reader.close();
 		} catch (SAXException e) {
 			e.printStackTrace();
 		} catch (FileNotFoundException e) {
