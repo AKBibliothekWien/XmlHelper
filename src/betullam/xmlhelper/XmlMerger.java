@@ -8,7 +8,9 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -26,7 +28,7 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 public class XmlMerger {
-	
+
 	Document document;
 
 	/**
@@ -40,13 +42,13 @@ public class XmlMerger {
 		returnNode = recordNodes.item(recordNodes.getLength()-1);
 		return returnNode;
 	}
+
 	
-	// TODO: Merge ALL nodes of an XML file (see example code below), not only the first one that is found.
-	// But it could be a problem with nested nodes (nodeCount).
 	/**
 	 * Gets the node with the specified tag name. If there are nested nodes with the same tag name,
 	 * use nodeCount to specify which node to take (starting with 0). If only one node exists with the
-	 * specified tag name, set nodeCount to 0. ATTENTION: This will only merge 1 node per XML file!
+	 * specified tag name, set nodeCount to 0. ATTENTION: This will only merge if the XML file contains
+	 * only 1 element!
 	 * @param tagName		a String with the tag name.
 	 * @param nodeCount 	an Integer with the number of the node
 	 * @return
@@ -57,37 +59,21 @@ public class XmlMerger {
 		returnNode = recordNodes.item(nodeCount);
 		return returnNode;
 	}
-	
-	
-	/*
-	// MERGES MULTIPLE NODES PER XML FILE - PROBLEM WITH nodeCount!
-	public List<Node> getElementNode(String tagName, int nodeCount) {
-		List<Node> returnNodeList = new ArrayList<Node>();
-		NodeList recordNodes = document.getElementsByTagName(tagName);
-		
-		int noOfElements = recordNodes.getLength();
-		
-		for (int i = 0; i < noOfElements; i++) {
-			Node currentNode = recordNodes.item(i);
-			returnNodeList.add(currentNode);
-			
-		}
 
-		return returnNodeList;
-	}
-	*/
 
 	/**
-	 * Checks a source directory for multiple XML files that should be merged togehter into one XML file. You may specify which nodes to copy from
+	 * IMPORTANT: Works only wiht XML-files having only one element!
+	 * Checks a source directory for multiple XML files that should be merged togehter into one XML file. You may specify which node to copy from
 	 * the old XML files to the new one that will be the result of the merging process. If there are multiple nested nodes with the same name, you
-	 * can specify which one to take by the nodeCount parameter (if there is only one, use "0"). You also need to specify the name of the parent node,
+	 * may specify which one to take by the nodeCount parameter (if there is only one, use "0"). You also need to specify the name of the parent node,
 	 * in which the copied nodes will be nested.
 	 * 
 	 * @param sourceDirectory	a String that specifies the full path to a directory with multiple XML files that should be merged.
 	 * @param destinationFile	a String that specifies the full path and name of a XML file that is the result of the merging process (Warning: it cannot be in the same path as the source files!)
 	 * @param parentNode		a String that specifies the parent node in which the merged nodes will be nested.
 	 * @param nodeToMerge		a String that specifies the name of the nodes that should be copied from the old file to the new one.
-	 * @param nodeCount			an Integer: Use 0 as default. If your source XML-files have nested nodes with the same name, use this to specify which node to take. 
+	 * @param nodeCount			an Integer: Use 0 as default. If your source XML-files have nested nodes with the same name, use this to specify which node to take.
+	 * @return 					true if the merge was successful, false otherwise
 	 */
 	public boolean mergeElementNodes(String sourceDirectory, String destinationFile, String parentNode, String nodeToMerge, int nodeCount) {
 		boolean isMergingSuccessful = false;
@@ -98,36 +84,36 @@ public class XmlMerger {
 			System.err.println("WARNING: Stopped merging process.\nIt's not possible to save the destination file in the source directory. Please specify another path for your destination file!");
 			return isMergingSuccessful;
 		}
-		
+
 		if (!fSourceDirectory.exists()) {
 			System.err.println("WARNING: Stopped merging process.\nDirectory with multiple xml files does not exist!");
 			return isMergingSuccessful;
 		}
-		
+
 		try {
 			OutputStream out = new BufferedOutputStream(new FileOutputStream(fDestinationFile.getAbsolutePath()));
 			PrintWriter writer = new PrintWriter(out);
-			
+
 			//int counter = 0;
 			writer.println("<" + parentNode + ">");
 			File[] files = fSourceDirectory.listFiles();
 			Arrays.sort(files);
 			for (File xmlFile : files) {
-				
+
 				this.setDocument(xmlFile.getAbsolutePath());
 				Node elementNode = this.getElementNode(nodeToMerge, nodeCount);
 				writer.println(nodeToString(elementNode));
-				
+
 				/*
 				List<Node> elementNodeList = this.getElementNode(nodeToMerge, nodeCount);
 				for (Node elementNode : elementNodeList) {
 					counter = counter + 1;
 					writer.println(nodeToString(elementNode));
 				}
-				*/
+				 */
 			}
 			writer.println("</" + parentNode + ">");
-			
+
 			if (writer!=null) { writer.close(); }
 			isMergingSuccessful = true;
 			//System.out.println("Merging done!");
@@ -135,15 +121,95 @@ public class XmlMerger {
 			isMergingSuccessful = false;
 			e.printStackTrace();
 		}
-		
+
 		return isMergingSuccessful;
-		
+
+	}
+
+	
+	
+	
+	
+	// TODO: Merge ALL nodes of an XML file (see example code below), not only the first one that is found.
+	// But it could be a problem with nested nodes (nodeCount).
+	// MERGES MULTIPLE NODES PER XML FILE - PROBLEM WITH nodeCount!
+	public List<Node> getMultipleElementNode(String tagName) {
+		List<Node> returnNodeList = new ArrayList<Node>();
+		NodeList recordNodes = document.getElementsByTagName(tagName);
+
+		int noOfElements = recordNodes.getLength();
+
+		for (int i = 0; i < noOfElements; i++) {
+			Node currentNode = recordNodes.item(i);
+			returnNodeList.add(currentNode);
+
+		}
+
+		return returnNodeList;
 	}
 	
+	/**
+	 * IMPORTANT: Works with multiple nodes per XML file, but if there are nested nodes of the same name, you can not specify which to take!
+	 * Checks a source directory for multiple XML files that should be merged togehter into one XML file.
+	 * 
+	 * @param sourceDirectory	a String that specifies the full path to a directory with multiple XML files that should be merged.
+	 * @param destinationFile	a String that specifies the full path and name of a XML file that is the result of the merging process (Warning: it cannot be in the same path as the source files!)
+	 * @param parentNode		a String that specifies the parent node in which the merged nodes will be nested.
+	 * @param nodeToMerge		a String that specifies the name of the nodes that should be copied from the old file to the new one.
+	 * @return 					true if the merge was successful, false otherwise
+	 */
+	public boolean mergeMultipleElementNodes(String sourceDirectory, String destinationFile, String parentNode, String nodeToMerge) {
+		boolean isMergingSuccessful = false;
+		//System.out.println("Started merging element nodes, please wait ...");
+		File fSourceDirectory = new File(sourceDirectory);
+		File fDestinationFile = new File(destinationFile);
+		if (fSourceDirectory.getAbsolutePath().equals(fDestinationFile.getParent())) {
+			System.err.println("WARNING: Stopped merging process.\nIt's not possible to save the destination file in the source directory. Please specify another path for your destination file!");
+			return isMergingSuccessful;
+		}
+
+		if (!fSourceDirectory.exists()) {
+			System.err.println("WARNING: Stopped merging process.\nDirectory with multiple xml files does not exist!");
+			return isMergingSuccessful;
+		}
+
+		try {
+			OutputStream out = new BufferedOutputStream(new FileOutputStream(fDestinationFile.getAbsolutePath()));
+			PrintWriter writer = new PrintWriter(out);
+
+			//int counter = 0;
+			writer.println("<" + parentNode + ">");
+			File[] files = fSourceDirectory.listFiles();
+			Arrays.sort(files);
+			for (File xmlFile : files) {
+				
+				this.setDocument(xmlFile.getAbsolutePath());
+				List<Node> elementNodeList = this.getMultipleElementNode(nodeToMerge);
+				for (Node elementNode : elementNodeList) {
+					writer.println(nodeToString(elementNode));
+				}
+				 
+			}
+			writer.println("</" + parentNode + ">");
+
+			if (writer!=null) { writer.close(); }
+			isMergingSuccessful = true;
+			//System.out.println("Merging done!");
+		} catch (FileNotFoundException e) {
+			isMergingSuccessful = false;
+			e.printStackTrace();
+		}
+
+		return isMergingSuccessful;
+
+	}
+
+
 
 	public void setDocument(String xmlFile) {
 		this.document = getXmlDocument(new File(xmlFile));
 	}
+
 	
 	public Document getDocument() {
 		return document;
@@ -178,7 +244,7 @@ public class XmlMerger {
 		} catch (SAXException | IOException | ParserConfigurationException e) {
 			e.printStackTrace();
 		}
-		
+
 		return doc;
 	}
 
