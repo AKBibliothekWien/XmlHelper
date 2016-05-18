@@ -199,15 +199,11 @@ public class Main {
 							System.out.print("Splitting file " + fileForSplitting.getAbsolutePath() + "                                                        \r");
 							xmls.split(fileForSplitting.getAbsolutePath(), nodeToExtractName, nodeToExtractCount, conditionNodeForFilename, conditionAttrsForFilename);
 						}
-					} else {
-						
+					} else if (!isDir){
+						System.out.print("Splitting file " + fileToSplit.getAbsolutePath() + "                                                        \r");
+						xmls.split(fileToSplit.getAbsolutePath(), nodeToExtractName, nodeToExtractCount, conditionNodeForFilename, conditionAttrsForFilename);
 					}
-
-					
-					
 				}
-
-
 			}
 
 
