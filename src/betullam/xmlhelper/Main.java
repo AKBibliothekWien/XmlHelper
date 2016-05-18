@@ -74,7 +74,6 @@ public class Main {
 			// Switch between main options
 			switch (selectedMainOption) {
 			case "v": {
-				System.out.println("\nStart validating XML files.");
 
 				String path = cmd.getOptionValue("v");
 				File file = new File(path);
@@ -84,6 +83,7 @@ public class Main {
 					File[] fileList = file.listFiles();
 					for (File fileInList : fileList) {
 						if (fileInList.isFile() && fileInList.canRead() && fileInList.getName().endsWith(".xml")) {
+							System.out.print("Validating XML file " + fileInList.getName() + "                                                                        \r");
 							if(!validator.validateXML(fileInList.getAbsolutePath())) {
 								System.err.println("XML file not valid: " + fileInList.getAbsolutePath());
 								return;
