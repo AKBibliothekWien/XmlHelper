@@ -2,6 +2,7 @@ package betullam.xmlhelper;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,6 +15,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.commons.io.FileUtils;
 
 public class Main {
 
@@ -172,12 +174,25 @@ public class Main {
 					}
 					
 					if (isDir) {
+						if (fileToSplit != null && fileToSplit.canRead()) {
+							// Get a sorted list (by filename) of all XML files:
+							List<File> filteredFiles = (List<File>)FileUtils.listFiles(fileToSplit, new String[] {"xml"}, true); // Get all xml-files recursively
+							for (File f : filteredFiles) {
+								if (f.isFile() && f.canRead() && f.getName().endsWith(".xml")) {
+									filesToSplit.add(f);
+								}
+							}
+							Collections.sort(filesToSplit); // Sort oldest to newest
+						}	
+						
+						/*
 						File[] arrFilesToSplit = fileToSplit.listFiles();
 						for (File f : arrFilesToSplit) {
 							if (f.isFile() && f.canRead() && f.getName().endsWith(".xml")) {
 								filesToSplit.add(f);
 							}
 						}
+						*/
 					}
 					
 					String strConditionAttrsForFilename = (splitArgs[4] != null) ? splitArgs[4] : null;
