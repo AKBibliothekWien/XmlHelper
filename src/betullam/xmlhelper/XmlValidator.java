@@ -40,6 +40,9 @@ public class XmlValidator {
 			returnValue = false;
 			return returnValue;
 			//e.printStackTrace();
+		} catch (Exception e) {
+			returnValue = false;
+			return returnValue;
 		}
 		
 		return returnValue;

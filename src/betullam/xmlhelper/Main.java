@@ -108,7 +108,7 @@ public class Main {
 							System.out.print("Validating XML file " + fileInList.getName() + "                                                                        \r");
 							if(!validator.validateXML(fileInList.getAbsolutePath())) {
 								System.err.println("XML file not valid: " + fileInList.getAbsolutePath());
-								return;
+								return; // TODO: break instead of return?
 							}
 						}
 					}
@@ -117,7 +117,7 @@ public class Main {
 					if (file.canRead() && file.getName().endsWith(".xml")) {
 						if(!validator.validateXML(file.getAbsolutePath())) {
 							System.err.println("XML file not valid: " + file.getAbsolutePath());
-							return;
+							return; // TODO: break instead of return?
 						}
 					}
 					System.out.println("XML file is valid."); // We got this far, everything seems to be OK
