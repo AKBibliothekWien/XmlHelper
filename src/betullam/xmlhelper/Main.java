@@ -43,13 +43,14 @@ public class Main {
 				.builder("m")
 				.required(true)
 				.longOpt("merge")
-				.desc("Merge multiple XML files to one single XML file. args:"
+				.desc("Merge multiple XML files to one single XML file. Works only wiht XML-files containing one single XML element. args:"
 						+ "\n 1. PathToFiles"
 						+ "\n 2. ElementToMerge (e. g. \"record\")"
-						+ "\n 3. NewFile"
-						+ "\n 4. NewXmlParentElement (e. g. \"collection\")")
+						+ "\n 3. ElementLevel (for nested elements with same name. 0 for top level, 1 for first level, ...)"
+						+ "\n 4. NewFile"
+						+ "\n 5. NewXmlParentElement (e. g. \"collection\")")
 				.hasArgs()
-				.numberOfArgs(4)
+				.numberOfArgs(5)
 				.build();
 
 		// s: split
@@ -132,12 +133,13 @@ public class Main {
 				String[] mergeArgs = cmd.getOptionValues("m");
 				String pathToFiles = (mergeArgs[0] != null) ? mergeArgs[0] : null;
 				String elementToMerge = (mergeArgs[1] != null) ? mergeArgs[1] : null;
-				String newFile = (mergeArgs[2] != null) ? mergeArgs[2] : null;
-				String newXmlParentElement = (mergeArgs[3] != null) ? mergeArgs[3] : null;
+				int elementLevel = (mergeArgs[2] != null) ? Integer.valueOf(mergeArgs[2]) : 0;
+				String newFile = (mergeArgs[3] != null) ? mergeArgs[3] : null;
+				String newXmlParentElement = (mergeArgs[4] != null) ? mergeArgs[4] : null;
 
 				if (pathToFiles != null && elementToMerge != null && newFile != null && newXmlParentElement != null) {
 					XmlMerger xmlm = new XmlMerger(); // Start merging
-					boolean isMergingSuccessful = xmlm.mergeElementNodes(pathToFiles, newFile, newXmlParentElement, elementToMerge, 0);
+					boolean isMergingSuccessful = xmlm.mergeElementNodes(pathToFiles, newFile, newXmlParentElement, elementToMerge, elementLevel);
 
 					if (isMergingSuccessful) {
 						System.out.println("Merging files was successful.");
@@ -146,6 +148,8 @@ public class Main {
 						return;
 					}
 				}
+				
+				break;
 			}
 
 			case "s": {
@@ -220,7 +224,7 @@ public class Main {
 					}
 				}
 			}
-
+			break;
 
 			}
 		} catch (ParseException e) {
