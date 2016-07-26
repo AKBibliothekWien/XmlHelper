@@ -69,6 +69,20 @@ public class Main {
 				.numberOfArgs(6)
 				.build();		
 
+		// c: count
+		Option oCount= Option
+				.builder("c")
+				.required(true)
+				.longOpt("count")
+				.desc("Count XML elements in a XML file. args:"
+						+ "\n 1. Path to XML file"
+						+ "\n 2. Name of XML tag to be counted. E. g. if you want to count <name>...</name> tags, use \"name\"."
+						+ "\n 3. Name of the attribute in the XML tag you want to count or \"null\". E. g. if you want to count all <name attr=\"...\" /> tags, use \"attr\"."
+						+ "\n 4. Value of the attribute in the XML tag you want to count or \"null\". E. g. if you want to count all <name attr=\"value\" /> tags, use \"value\".")
+				.hasArgs()
+				.numberOfArgs(4)
+				.build();
+
 		// h: help
 		Option oHelp = Option
 				.builder("h")
@@ -80,6 +94,7 @@ public class Main {
 		optionGroup.addOption(oValidate);
 		optionGroup.addOption(oMerge);
 		optionGroup.addOption(oSplit);
+		optionGroup.addOption(oCount);
 		optionGroup.addOption(oHelp);
 		options.addOptionGroup(optionGroup);
 
@@ -148,16 +163,16 @@ public class Main {
 						return;
 					}
 				}
-				
+
 				break;
 			}
 
 			case "s": {
-				
+
 				System.out.println("\nStart splitting XML file.");
 				String[] splitArgs = cmd.getOptionValues("s");
 				List<File> filesToSplit = new ArrayList<File>();
-				
+
 
 				String strFileToSplit = (splitArgs[0] != null) ? splitArgs[0] : null;
 				String nodeToExtractName = (splitArgs[1] != null) ? splitArgs[1] : null;
@@ -169,14 +184,14 @@ public class Main {
 				if (strFileToSplit != null && nodeToExtractName != null && conditionNodeForFilename != null && destinationDir != null) {
 
 					XmlSplitter xmls = new XmlSplitter(destinationDir);
-					
+
 					// Check if file or path:
 					File fileToSplit = new File(strFileToSplit);
 					boolean isDir = false;
 					if (fileToSplit.isDirectory()) {
 						isDir = true;
 					}
-					
+
 					if (isDir) {
 						if (fileToSplit != null && fileToSplit.canRead()) {
 							// Get a sorted list (by filename) of all XML files:
@@ -188,7 +203,7 @@ public class Main {
 							}
 							Collections.sort(filesToSplit); // Sort oldest to newest
 						}	
-						
+
 						/*
 						File[] arrFilesToSplit = fileToSplit.listFiles();
 						for (File f : arrFilesToSplit) {
@@ -196,9 +211,9 @@ public class Main {
 								filesToSplit.add(f);
 							}
 						}
-						*/
+						 */
 					}
-					
+
 					String strConditionAttrsForFilename = (splitArgs[4] != null) ? splitArgs[4] : null;
 					if (strConditionAttrsForFilename != null && !strConditionAttrsForFilename.equals("null") && !strConditionAttrsForFilename.isEmpty()) {
 						String[] arrConditionAttrsForFilename = strConditionAttrsForFilename.split("\\s*,\\s*");
@@ -211,7 +226,7 @@ public class Main {
 							}
 						}
 					}
-					
+
 					if (isDir && !filesToSplit.isEmpty()) {
 						// Split XMLs. Files will be overwritten by newer files with same name:
 						for (File fileForSplitting : filesToSplit) {
@@ -223,8 +238,28 @@ public class Main {
 						xmls.split(fileToSplit.getAbsolutePath(), nodeToExtractName, nodeToExtractCount, conditionNodeForFilename, conditionAttrsForFilename);
 					}
 				}
+
+				break;
 			}
-			break;
+
+			case "c": {
+
+				System.out.println("\nStart counting XML elements.");
+				String[] countArgs = cmd.getOptionValues("c");
+
+				String xmlFile = (countArgs[0] != null) ? countArgs[0] : null;
+				String tagName = (countArgs[1] != null) ? countArgs[1] : null;
+				String attrName = (countArgs[2] != null && !countArgs[2].equals("null")) ? countArgs[2] : null;
+				String attrValue = (countArgs[3] != null && !countArgs[3].equals("null")) ? countArgs[3] : null;
+
+				if (xmlFile != null && tagName != null) {
+					XmlCounter xmlc = new XmlCounter();
+					int noOfElements = xmlc.count(xmlFile, tagName, attrName, attrValue, true);
+					System.out.print("                                                                                              \r");
+					System.out.print("Total elements: " + noOfElements + "\n");
+				}
+				break;
+			}
 
 			}
 		} catch (ParseException e) {
