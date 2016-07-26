@@ -72,7 +72,7 @@ public class XmlCleaner {
 
 				// Write the cleaned line to a new file:
 				writer.println(line);
-				System.out.println("XML cleaning done!");
+				//System.out.println("XML cleaning done!");
 
 			}
 

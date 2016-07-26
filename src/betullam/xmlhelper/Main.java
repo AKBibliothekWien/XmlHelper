@@ -83,6 +83,17 @@ public class Main {
 				.numberOfArgs(4)
 				.build();
 
+		// l: cLean
+				Option oClean= Option
+						.builder("l")
+						.required(true)
+						.longOpt("clean")
+						.desc("Clean XML syntax (removing forbidden Unicode characters) in a given XML-file. args:"
+								+ "\n 1. Path to XML file")
+						.hasArgs()
+						.numberOfArgs(1)
+						.build();
+				
 		// h: help
 		Option oHelp = Option
 				.builder("h")
@@ -95,6 +106,7 @@ public class Main {
 		optionGroup.addOption(oMerge);
 		optionGroup.addOption(oSplit);
 		optionGroup.addOption(oCount);
+		optionGroup.addOption(oClean);
 		optionGroup.addOption(oHelp);
 		options.addOptionGroup(optionGroup);
 
@@ -258,6 +270,19 @@ public class Main {
 					System.out.print("                                                                                              \r");
 					System.out.print("Total elements: " + noOfElements + "\n");
 				}
+				break;
+			}
+			
+			case "l": {
+				
+				//System.out.println("\nStart cleaning XML file.");
+				String[] cleanArgs = cmd.getOptionValues("l");
+
+				String xmlFile = (cleanArgs[0] != null) ? cleanArgs[0] : null;
+				XmlCleaner xmlcl = new XmlCleaner();
+				xmlcl.cleanXml(xmlFile);
+				System.out.println("Path to cleaned file: " + xmlcl.getCleanedFile());
+				
 				break;
 			}
 
