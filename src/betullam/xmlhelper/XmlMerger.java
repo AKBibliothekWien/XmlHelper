@@ -233,7 +233,7 @@ public class XmlMerger {
 			XMLReader xmlReader = XMLReaderFactory.createXMLReader();
 
 			// Set ContentHandler:
-			XmlContentHandler xmlContentHandler = new XmlContentHandler();
+			XmlContentHandler xmlContentHandler = new XmlContentHandler(elementToMerge);
 			xmlReader.setContentHandler(xmlContentHandler);
 
 			OutputStream out = new BufferedOutputStream(new FileOutputStream(fDestinationFile.getAbsolutePath()));
@@ -252,7 +252,9 @@ public class XmlMerger {
 				// Start parsing & indexing:
 				xmlReader.parse(inputSource);
 			}
+			writer.println("</" + parentElement + ">");
 
+			if (writer!=null) { writer.close(); }
 			isMergingSuccessful = true;
 
 		} catch (FileNotFoundException e) {
@@ -312,70 +314,86 @@ public class XmlMerger {
 
 	private class XmlContentHandler implements ContentHandler {
 
+		String elementToMerge;
+		String elementContent;
+		int elementCounter = 0;
+		
+		private XmlContentHandler(String elementToMerge) {
+			this.elementToMerge = elementToMerge;
+		}
+		
+		/**
+		 * Encounters start of element.<br><br>
+		 * {@inheritDoc}
+		 */
+		@Override
+		public void startElement(String uri, String localName, String qName, Attributes atts) throws SAXException {
+			// Clear the element content variable (= text of XML element). If not, there will be problems with html-encoded characters (&lt;) at character()-method:
+			elementContent = "";
+			
+			if(localName.equals(elementToMerge)) {
+				elementCounter = elementCounter + 1;
+				System.out.println("Start: " + elementToMerge + " is on level " + elementCounter);
+			}
+		}
+
+		/**
+		 * Encounters end of element.<br><br>
+		 * {@inheritDoc}
+		 */
+		@Override
+		public void endElement(String uri, String localName, String qName) throws SAXException {
+			String content = elementContent.toString();
+			
+			
+			if(localName.equals(elementToMerge) ) {
+				elementCounter = elementCounter - 1;
+				System.out.println("End: " + elementToMerge + " is on level " + elementCounter);
+			}
+		}
+		
+		/**
+		 * Reads the content of the current XML element.<br><br>
+		 * {@inheritDoc}
+		 */
+		@Override
+		public void characters(char[] ch, int start, int length) throws SAXException {
+			elementContent += new String(ch, start, length);
+		}
+		
+		
+		
+		// Other methods that are not used at the moment
 		@Override
 		public void setDocumentLocator(Locator locator) {
-			// TODO Auto-generated method stub
-
 		}
 
 		@Override
 		public void startDocument() throws SAXException {
-			// TODO Auto-generated method stub
-
 		}
 
 		@Override
 		public void endDocument() throws SAXException {
-			// TODO Auto-generated method stub
-
 		}
 
 		@Override
 		public void startPrefixMapping(String prefix, String uri) throws SAXException {
-			// TODO Auto-generated method stub
-
 		}
 
 		@Override
 		public void endPrefixMapping(String prefix) throws SAXException {
-			// TODO Auto-generated method stub
-
-		}
-
-		@Override
-		public void startElement(String uri, String localName, String qName, Attributes atts) throws SAXException {
-			// TODO Auto-generated method stub
-
-		}
-
-		@Override
-		public void endElement(String uri, String localName, String qName) throws SAXException {
-			// TODO Auto-generated method stub
-
-		}
-
-		@Override
-		public void characters(char[] ch, int start, int length) throws SAXException {
-			// TODO Auto-generated method stub
-
 		}
 
 		@Override
 		public void ignorableWhitespace(char[] ch, int start, int length) throws SAXException {
-			// TODO Auto-generated method stub
-
 		}
 
 		@Override
 		public void processingInstruction(String target, String data) throws SAXException {
-			// TODO Auto-generated method stub
-
 		}
 
 		@Override
 		public void skippedEntity(String name) throws SAXException {
-			// TODO Auto-generated method stub
-
 		}
 
 	}
