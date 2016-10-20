@@ -23,6 +23,7 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -213,10 +214,12 @@ public class XmlMerger {
 
 
 	// TODO: Merge elements using a SAX Parser
-	public boolean mergeElements(String sourceDirectory, String destinationFile, String parentElement, String elementToMerge, int elementCount) {
+	public boolean mergeElements(String sourceDirectory, String destinationFile, String parentElement, String elementToMerge, int elementLevel) {
 		boolean isMergingSuccessful = false;
 
-		File fSourceDirectory = new File(sourceDirectory);
+		//File fSourceDirectory = new File(sourceDirectory);
+		//File fSourceDirectory = new File("/home/betullam/AK/AKsearch/OaiData/goobi/original/1476893416113");
+		File fSourceDirectory = new File("/home/betullam/AK/AKsearch/OaiData/goobi/original/test_multiple_records");
 		File fDestinationFile = new File(destinationFile);
 		if (fSourceDirectory.getAbsolutePath().equals(fDestinationFile.getParent())) {
 			System.err.println("WARNING: Stopped merging process.\nIt's not possible to save the destination file in the source directory. Please specify another path for your destination file!");
@@ -232,25 +235,32 @@ public class XmlMerger {
 			// Create SAX parser:
 			XMLReader xmlReader = XMLReaderFactory.createXMLReader();
 
-			// Set ContentHandler:
-			XmlContentHandler xmlContentHandler = new XmlContentHandler(elementToMerge);
-			xmlReader.setContentHandler(xmlContentHandler);
+			// Set SAX parser namespace aware (namespaceawareness)
+			xmlReader.setFeature("http://xml.org/sax/features/namespace-prefixes", true);
 
+			// Create OutputStream and PrintWriter
 			OutputStream out = new BufferedOutputStream(new FileOutputStream(fDestinationFile.getAbsolutePath()));
 			PrintWriter writer = new PrintWriter(out);
 
+			// Set ContentHandler:
+			XmlContentHandler xmlContentHandler = new XmlContentHandler(parentElement, elementToMerge, elementLevel, writer);
+			xmlReader.setContentHandler(xmlContentHandler);
+
 			//int counter = 0;
+			writer.println("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
 			writer.println("<" + parentElement + ">");
 			File[] files = fSourceDirectory.listFiles();
 			Arrays.sort(files);
-			
+
 			for (File xmlFile : files) {
 				// Specify XML-file to parse.
 				FileReader reader = new FileReader(xmlFile);
 				InputSource inputSource = new InputSource(reader);
 
+				System.out.println("\n\nStart parsing ...");
+
 				// Start parsing & indexing:
-				xmlReader.parse(inputSource);
+				xmlReader.parse(inputSource);				
 			}
 			writer.println("</" + parentElement + ">");
 
@@ -264,7 +274,7 @@ public class XmlMerger {
 		} catch (SAXException e) {
 			e.printStackTrace();
 		}
-		
+
 		return isMergingSuccessful;
 
 
@@ -314,14 +324,23 @@ public class XmlMerger {
 
 	private class XmlContentHandler implements ContentHandler {
 
+		String parentElement;
 		String elementToMerge;
+		PrintWriter writer;
 		String elementContent;
-		int elementCounter = 0;
-		
-		private XmlContentHandler(String elementToMerge) {
+		String fullXmlString;
+		int elementLevel = 0;
+		int elementLevelCounter = 0;
+		boolean withinElement = false;
+		boolean withinLevel = false;
+
+		private XmlContentHandler(String parentElement, String elementToMerge, int elementLevel, PrintWriter writer) {
 			this.elementToMerge = elementToMerge;
+			this.parentElement = parentElement;
+			this.elementLevel = elementLevel;
+			this.writer = writer;
 		}
-		
+
 		/**
 		 * Encounters start of element.<br><br>
 		 * {@inheritDoc}
@@ -330,12 +349,44 @@ public class XmlMerger {
 		public void startElement(String uri, String localName, String qName, Attributes atts) throws SAXException {
 			// Clear the element content variable (= text of XML element). If not, there will be problems with html-encoded characters (&lt;) at character()-method:
 			elementContent = "";
-			
+
+
 			if(localName.equals(elementToMerge)) {
-				elementCounter = elementCounter + 1;
-				System.out.println("Start: " + elementToMerge + " is on level " + elementCounter);
+				withinElement = true;
+				elementLevelCounter = elementLevelCounter + 1;
+				
+				// If we encounter the given element at the appropriate level, reset the String for the full XML for a fresh start
+				if (elementLevelCounter == elementLevel) {
+					fullXmlString = "";
+				}
+				
+				if (elementLevelCounter == elementLevel) {
+					withinLevel = true;
+				}				
+			}
+
+
+
+			if (withinElement && withinLevel) {
+
+				System.out.println("<" + qName + ">");
+				
+				fullXmlString += "<" + qName;
+				for (int a = 0; a < atts.getLength(); a++) {
+					String attQName = atts.getQName(a);
+					String attValue = StringEscapeUtils.escapeXml10(atts.getValue(a));
+
+					// Add the xsi namespace if appropriate:
+					if (attQName.contains("xsi:")) {
+						fullXmlString += " xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"";
+					}
+					fullXmlString += " " + attQName + "=\"" + attValue + "\"";
+
+				}
+				fullXmlString += ">";
 			}
 		}
+		
 
 		/**
 		 * Encounters end of element.<br><br>
@@ -343,15 +394,34 @@ public class XmlMerger {
 		 */
 		@Override
 		public void endElement(String uri, String localName, String qName) throws SAXException {
+
 			String content = elementContent.toString();
 			
+			if (withinElement && withinLevel) {
+				System.out.println("</" + qName + ">");
+				fullXmlString += StringEscapeUtils.escapeXml10(content);
+				elementContent = "";
+				fullXmlString += "</" + qName + ">";
+			}
 			
 			if(localName.equals(elementToMerge) ) {
-				elementCounter = elementCounter - 1;
-				System.out.println("End: " + elementToMerge + " is on level " + elementCounter);
+				withinElement = false;
+				if (elementLevelCounter < elementLevel) {
+					withinLevel = false;
+					System.out.println("End  : Within " + qName + " at level " + elementLevelCounter);
+				}
+				elementLevelCounter = elementLevelCounter - 1;
+
+				writer.println(fullXmlString);
 			}
+			
+			
+
+
+
+
 		}
-		
+
 		/**
 		 * Reads the content of the current XML element.<br><br>
 		 * {@inheritDoc}
@@ -360,9 +430,13 @@ public class XmlMerger {
 		public void characters(char[] ch, int start, int length) throws SAXException {
 			elementContent += new String(ch, start, length);
 		}
-		
-		
-		
+
+		public String getFullXmlString() {
+			return this.fullXmlString;
+		}
+
+
+
 		// Other methods that are not used at the moment
 		@Override
 		public void setDocumentLocator(Locator locator) {
