@@ -166,7 +166,8 @@ public class Main {
 
 				if (pathToFiles != null && elementToMerge != null && newFile != null && newXmlParentElement != null) {
 					XmlMerger xmlm = new XmlMerger(); // Start merging
-					boolean isMergingSuccessful = xmlm.mergeElementNodes(pathToFiles, newFile, newXmlParentElement, elementToMerge, elementLevel);
+					//boolean isMergingSuccessful = xmlm.mergeElementNodes(pathToFiles, newFile, newXmlParentElement, elementToMerge, elementLevel);
+					boolean isMergingSuccessful = xmlm.mergeElements(pathToFiles, newFile, newXmlParentElement, elementToMerge, elementLevel);
 
 					if (isMergingSuccessful) {
 						System.out.println("Merging files was successful.");
