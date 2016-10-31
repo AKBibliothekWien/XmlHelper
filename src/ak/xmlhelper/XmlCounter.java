@@ -1,4 +1,4 @@
-package betullam.xmlhelper;
+package ak.xmlhelper;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;

@@ -1,4 +1,4 @@
-package betullam.xmlhelper;
+package ak.xmlhelper;
 
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;

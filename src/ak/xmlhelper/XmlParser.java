@@ -14,7 +14,7 @@
  * along with GoobiOaiHelper.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package betullam.xmlhelper;
+package ak.xmlhelper;
 
 import java.util.ArrayList;
 import java.util.List;

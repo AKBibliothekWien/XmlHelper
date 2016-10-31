@@ -1,4 +1,4 @@
-package betullam.xmlhelper;
+package ak.xmlhelper;
 
 import java.io.FileReader;
 import java.io.IOException;
