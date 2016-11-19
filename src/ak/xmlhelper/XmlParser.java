@@ -40,6 +40,27 @@ public class XmlParser {
 
 
 	/**
+	 * Get the result of a XPath expression as List<String>
+	 * @param document						the xml document that contains the element to parse
+	 * @param xpath							the xpath which leads to the element in the XML document for which the value should be returned
+	 * @return								a List<String> containing one or more results or null if no result is found.
+	 * @throws XPathExpressionException
+	 */
+	public List<String> getXpathResult(Document document, String xpath) throws XPathExpressionException {
+		List<String> xpathResults = null;
+		XPathExpression xPathExpression = xPath.compile(xpath);
+		NodeList nodeList = (NodeList)xPathExpression.evaluate(document, XPathConstants.NODESET);
+		if (nodeList.getLength() > 0) {
+			xpathResults = new ArrayList<String>();
+			for (int i = 0; i < nodeList.getLength(); i++) {
+				String xpathResult = (nodeList.item(i).getTextContent() == null || nodeList.item(i).getTextContent().trim().isEmpty()) ? null : nodeList.item(i).getTextContent().trim();
+				xpathResults.add(xpathResult);
+			}
+		}
+		return xpathResults;
+	}
+	
+	/**
 	 * Gets the text value (content) of one XML element. If xpath-expression finds more than one element, only the first text-value will be returned. Returns null if nothing was found.
 	 * 
 	 * @param document	the xml document that contains the element to parse
