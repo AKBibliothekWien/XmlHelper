@@ -54,7 +54,9 @@ public class XmlParser {
 			xpathResults = new ArrayList<String>();
 			for (int i = 0; i < nodeList.getLength(); i++) {
 				String xpathResult = (nodeList.item(i).getTextContent() == null || nodeList.item(i).getTextContent().trim().isEmpty()) ? null : nodeList.item(i).getTextContent().trim();
-				xpathResults.add(xpathResult);
+				if (xpathResult != null) {
+					xpathResults.add(xpathResult);
+				}
 			}
 		}
 		return xpathResults;
