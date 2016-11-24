@@ -46,7 +46,7 @@ public class XmlParser {
 	 * @return								a List<String> containing one or more results or null if no result is found.
 	 * @throws XPathExpressionException
 	 */
-	public List<String> getXpathResult(Document document, String xpath) throws XPathExpressionException {
+	public List<String> getXpathResult(Document document, String xpath, boolean returnNull) throws XPathExpressionException {
 		List<String> xpathResults = null;
 		XPathExpression xPathExpression = xPath.compile(xpath);
 		NodeList nodeList = (NodeList)xPathExpression.evaluate(document, XPathConstants.NODESET);
@@ -54,7 +54,9 @@ public class XmlParser {
 			xpathResults = new ArrayList<String>();
 			for (int i = 0; i < nodeList.getLength(); i++) {
 				String xpathResult = (nodeList.item(i).getTextContent() == null || nodeList.item(i).getTextContent().trim().isEmpty()) ? null : nodeList.item(i).getTextContent().trim();
-				if (xpathResult != null) {
+				if (!returnNull && xpathResult != null) {
+					xpathResults.add(xpathResult);
+				} else if (returnNull) {
 					xpathResults.add(xpathResult);
 				}
 			}
