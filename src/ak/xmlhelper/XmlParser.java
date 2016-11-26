@@ -17,16 +17,24 @@
 package ak.xmlhelper;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
+import javax.xml.XMLConstants;
+import javax.xml.namespace.NamespaceContext;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
+import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 /**
@@ -48,6 +56,8 @@ public class XmlParser {
 	 */
 	public List<String> getXpathResult(Document document, String xpath, boolean returnNull) throws XPathExpressionException {
 		List<String> xpathResults = null;
+		xPath.setNamespaceContext(new Namespaces(document));
+
 		XPathExpression xPathExpression = xPath.compile(xpath);
 		NodeList nodeList = (NodeList)xPathExpression.evaluate(document, XPathConstants.NODESET);
 		if (nodeList.getLength() > 0) {
@@ -63,7 +73,7 @@ public class XmlParser {
 		}
 		return xpathResults;
 	}
-	
+
 	/**
 	 * Gets the text value (content) of one XML element. If xpath-expression finds more than one element, only the first text-value will be returned. Returns null if nothing was found.
 	 * 
@@ -193,5 +203,68 @@ public class XmlParser {
 
 		return noOfNodes;
 	}
+
+
+
+	public class Namespaces implements NamespaceContext {
+		private Map<String, String> valuesNames = new HashMap<String, String>();
+		private Map<String, String> namesValues = new HashMap<String, String>();
+
+		public Namespaces(Document doc) {
+			checkNodeForNS(doc.getFirstChild());
+		}
+
+		private void checkNodeForNS(Node startNode) {
+			NamedNodeMap attrs = startNode.getAttributes();
+			for (int i = 0; i < attrs.getLength(); i++) {
+				Node attr = attrs.item(i);
+				storeNamespaces((Attr) attr);
+			}
+
+			NodeList childNodes = startNode.getChildNodes();
+			for (int i = 0; i < childNodes.getLength(); i++) {
+				Node childNode = childNodes.item(i);
+				if (childNode.getNodeType() == Node.ELEMENT_NODE) {
+					checkNodeForNS(childNode);
+				}
+			}
+		}
+
+		private void storeNamespaces(Attr attr) {
+			if (attr.getNamespaceURI() != null && attr.getNamespaceURI().equals(XMLConstants.XMLNS_ATTRIBUTE_NS_URI)) {
+				if (attr.getNodeName().equals(XMLConstants.XMLNS_ATTRIBUTE)) {
+					putNamespaces("NoNS", attr.getNodeValue());
+				} else {
+					putNamespaces(attr.getLocalName(), attr.getNodeValue());
+				}
+			}
+		}
+
+		private void putNamespaces(String nodeName, String nodeValue) {
+			namesValues.put(nodeName, nodeValue);
+			valuesNames.put(nodeValue, nodeName);
+		}
+
+		public String getNamespaceURI(String nsPrefix) {
+			if (nsPrefix == null || nsPrefix.equals(XMLConstants.DEFAULT_NS_PREFIX)) {
+				return namesValues.get("NoNS");
+			} else {
+				return namesValues.get(nsPrefix);
+			}
+		}
+
+		
+		/**
+		 * Methods not needed
+		 */
+		public String getPrefix(String namespaceURI) {
+			return valuesNames.get(namespaceURI);
+		}
+		public Iterator<?> getPrefixes(String namespaceURI) {
+			return null;
+		}
+
+	}
+
 
 }
