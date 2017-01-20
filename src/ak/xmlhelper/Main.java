@@ -88,8 +88,9 @@ public class Main {
 						.builder("l")
 						.required(true)
 						.longOpt("clean")
-						.desc("Clean XML syntax (removing forbidden Unicode characters) in a given XML-file. args:"
-								+ "\n 1. Path to XML file")
+						.desc("Clean XML syntax (removing forbidden characters) in a given XML-file(s). args:"
+								+ "\n 1. Path to XML file(s). This could be a single file with the ending \".xml\" or a directory with multiple XML files."
+								+ "\n 2. \"true\" if you want to save the cleaned data to the same file (the original will be lost!), \"false\" otherwise.")
 						.hasArgs()
 						.numberOfArgs(2)
 						.build();
@@ -276,14 +277,14 @@ public class Main {
 			
 			case "l": {
 				
-				System.out.println("\nStart cleaning XML file.");
+				System.out.println("\nStart cleaning XML file(s).");
 				String[] cleanArgs = cmd.getOptionValues("l");
 
 				String xmlFile = (cleanArgs[0] != null) ? cleanArgs[0] : null;
 				boolean saveToSameFile = (cleanArgs[1] != null) ? Boolean.parseBoolean(cleanArgs[1]) : null;
 				XmlCleaner xmlcl = new XmlCleaner();
 				xmlcl.cleanXml(xmlFile, saveToSameFile);
-				System.out.println("Path to cleaned file: " + xmlcl.getCleanedFile());
+				System.out.println("Path to cleaned file(s): " + xmlcl.getCleanedFile());
 				
 				break;
 			}
