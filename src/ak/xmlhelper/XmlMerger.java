@@ -38,6 +38,8 @@ public class XmlMerger {
 			return isMergingSuccessful;
 		}
 
+		String fileName = null;
+		
 		try {
 			// Create SAX parser:
 			XMLReader xmlReader = XMLReaderFactory.createXMLReader();
@@ -66,11 +68,12 @@ public class XmlMerger {
 			// Iterate over files that should be merged
 			for (File xmlFile : files) {
 				// Specify XML-file to parse
+				fileName = xmlFile.getAbsolutePath();
 				FileReader reader = new FileReader(xmlFile);
 				InputSource inputSource = new InputSource(reader);
-
+				
 				// Start parsing
-				xmlReader.parse(inputSource);				
+				xmlReader.parse(inputSource);
 			}
 			
 			// Close given parent element
@@ -83,9 +86,12 @@ public class XmlMerger {
 
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
+			System.err.println("File not found: " + fileName);
 		} catch (IOException e) {
+			System.err.println("Error when parsing file: " + fileName);
 			e.printStackTrace();
 		} catch (SAXException e) {
+			System.err.println("SAXException when parsing file: " + fileName);
 			e.printStackTrace();
 		}
 
@@ -216,10 +222,11 @@ public class XmlMerger {
 		 * {@inheritDoc}
 		 */
 		@Override
-		public void characters(char[] ch, int start, int length) throws SAXException {
+		public void characters(char[] ch, int start, int length) throws SAXException {			
 			elementContent += new String(ch, start, length);
 		}
-
+			
+		
 		
 		
 
