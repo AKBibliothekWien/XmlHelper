@@ -23,6 +23,7 @@ public class XmlSplitter {
 	private String tempDirPath = systemTempDirPath + File.separator + "xmlSplitted";
 	private File destinationDirectory = null;
 
+	
 	public XmlSplitter(String destinationDirectoryPath) {
 		// Create destination directory. If destinationDirectoryPath is null, we use temp directory of OS:
 		if (destinationDirectoryPath == null || destinationDirectoryPath.isEmpty()) {
@@ -35,6 +36,7 @@ public class XmlSplitter {
 		}
 	}
 
+	
 	public void split(String sourceFile, String nodeNametoExtract, int nodeCount, String condNodeForFilename, Map<String, String> condAttrsForFilename) {
 
 		try {
@@ -58,12 +60,13 @@ public class XmlSplitter {
 
 	}
 
+	
 	public File getDestinationDirectory() {
 		return this.destinationDirectory;
 	}
 
-
-
+	
+	
 	private class SplitterContentHandler implements ContentHandler {
 
 		private String nodeNameToExtract;
@@ -74,8 +77,6 @@ public class XmlSplitter {
 		private boolean isRequestedElement = false;
 		private String textContent;
 		private String element = "";
-		//private String systemTempDirPath = System.getProperty("java.io.tmpdir");
-		//private String tempDirPath = systemTempDirPath + File.separator + "xmlSplitted";
 		private File destinationDirectory = null;
 		private boolean isFilenameNode = false;
 		private String fileName = "";
@@ -88,35 +89,8 @@ public class XmlSplitter {
 			this.nodeCount = nodeCount;
 			this.fileNameNode = fileNameNode;
 			this.fileNameAttrs = fileNameAttrs;
-
-			/*
-			// Create destination directory. If destinationDirectoryPath is null, we use temp directory of OS:
-			if (destinationDirectoryPath == null || destinationDirectoryPath.isEmpty()) {
-				this.destinationDirectory = new File(tempDirPath);
-			} else {
-				this.destinationDirectory = new File(destinationDirectoryPath);
-			}
-
-			if (!this.destinationDirectory.exists()) {
-				this.destinationDirectory.mkdir();
-			}
-			 */
 		}
 
-		@Override
-		public void setDocumentLocator(Locator locator) {}
-
-		@Override
-		public void startDocument() throws SAXException {}
-
-		@Override
-		public void endDocument() throws SAXException {}
-
-		@Override
-		public void startPrefixMapping(String prefix, String uri) throws SAXException {}
-
-		@Override
-		public void endPrefixMapping(String prefix) throws SAXException {}
 
 		@Override
 		public void startElement(String uri, String localName, String qName, Attributes attrs) throws SAXException {
@@ -180,6 +154,7 @@ public class XmlSplitter {
 			}
 		}
 
+		
 		@Override
 		public void endElement(String uri, String localName, String qName) throws SAXException {
 
@@ -238,31 +213,35 @@ public class XmlSplitter {
 
 		}
 
+		
 		@Override
 		public void characters(char[] ch, int start, int length) throws SAXException { // Get text content of nodes
 			this.textContent += new String(ch, start, length);
 			this.textContent = this.textContent.replaceAll("\\s+", " ");
 		}
-
-		@Override
-		public void ignorableWhitespace(char[] ch, int start, int length) throws SAXException {}
-
-		@Override
-		public void processingInstruction(String target, String data) throws SAXException {}
-
-		@Override
-		public void skippedEntity(String name) throws SAXException {}
-
-
+		
+		
 		private String escapeXml(String string) {
 			// Escape characters that are not allowed in XML:
 			return string.replaceAll("&", "&amp;").replaceAll("\"", "&quot;").replaceAll("\'", "&apos;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
 		}
 		
+		
 		private String unescapeXml(String string) {
 			// Unescape escaped characters:
 			return string.replaceAll("&amp;", "&").replaceAll("&quot;", "\"").replaceAll("&apos;", "\'").replaceAll("&lt;", "<").replaceAll("&gt;", ">");
-
 		}
+
+		
+		// Unused methods of ContentHandler
+		@Override public void ignorableWhitespace(char[] ch, int start, int length) throws SAXException {}
+		@Override public void processingInstruction(String target, String data) throws SAXException {}
+		@Override public void skippedEntity(String name) throws SAXException {}
+		@Override public void setDocumentLocator(Locator locator) {}
+		@Override public void startDocument() throws SAXException {}
+		@Override public void endDocument() throws SAXException {}
+		@Override public void startPrefixMapping(String prefix, String uri) throws SAXException {}
+		@Override public void endPrefixMapping(String prefix) throws SAXException {}
 	}
+
 }

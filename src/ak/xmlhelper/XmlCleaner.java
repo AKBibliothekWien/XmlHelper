@@ -38,12 +38,7 @@ public class XmlCleaner {
 		File xmlFile = new File(pathToXmlFile);
 
 		if (xmlFile.isFile()) {
-			if (xmlFile.getAbsolutePath().endsWith(".xml")) {
-				/*originalFiles.add(xmlFile);
-				String cleanedFileName = xmlFile.getAbsolutePath() + "_clean";
-				cleanedFileName = xmlFile.getAbsolutePath().replace(".xml", "") + "_clean.xml";
-				cleanedFileNames.add(cleanedFileName);*/
-				
+			if (xmlFile.getAbsolutePath().endsWith(".xml")) {				
 				String cleanedFileName = xmlFile.getAbsolutePath() + "_clean";
 				cleanedFileName = xmlFile.getAbsolutePath().replace(".xml", "") + "_clean.xml";
 				fileMap.put(cleanedFileName, xmlFile);
@@ -51,12 +46,7 @@ public class XmlCleaner {
 		} else if (xmlFile.isDirectory()) {
 			File[] xmlFiles = xmlFile.listFiles();
 			for (File xFile : xmlFiles) {
-				if (xFile.getAbsolutePath().endsWith(".xml")) {
-					/*originalFiles.add(xFile);
-					String cleanedFileName = xFile.getAbsolutePath() + "_clean";
-					cleanedFileName = xFile.getAbsolutePath().replace(".xml", "") + "_clean.xml";
-					cleanedFileNames.add(cleanedFileName);*/
-					
+				if (xFile.getAbsolutePath().endsWith(".xml")) {					
 					String cleanedFileName = xFile.getAbsolutePath() + "_clean";
 					cleanedFileName = xFile.getAbsolutePath().replace(".xml", "") + "_clean.xml";
 					fileMap.put(cleanedFileName, xFile);
