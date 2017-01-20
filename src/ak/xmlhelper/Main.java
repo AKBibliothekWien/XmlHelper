@@ -91,7 +91,7 @@ public class Main {
 						.desc("Clean XML syntax (removing forbidden Unicode characters) in a given XML-file. args:"
 								+ "\n 1. Path to XML file")
 						.hasArgs()
-						.numberOfArgs(1)
+						.numberOfArgs(2)
 						.build();
 				
 		// h: help
@@ -276,12 +276,13 @@ public class Main {
 			
 			case "l": {
 				
-				//System.out.println("\nStart cleaning XML file.");
+				System.out.println("\nStart cleaning XML file.");
 				String[] cleanArgs = cmd.getOptionValues("l");
 
 				String xmlFile = (cleanArgs[0] != null) ? cleanArgs[0] : null;
+				boolean saveToSameFile = (cleanArgs[1] != null) ? Boolean.parseBoolean(cleanArgs[1]) : null;
 				XmlCleaner xmlcl = new XmlCleaner();
-				xmlcl.cleanXml(xmlFile);
+				xmlcl.cleanXml(xmlFile, saveToSameFile);
 				System.out.println("Path to cleaned file: " + xmlcl.getCleanedFile());
 				
 				break;
