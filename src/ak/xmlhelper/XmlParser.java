@@ -1,5 +1,5 @@
 /**
- * This file is part of GoobiOaiHelper.
+_mv * This file is part of GoobiOaiHelper.
  * 
  * GoobiOaiHelper is free software: you can redistribute it and/or modify
  * the Free Software Foundation, either version 3 of the License, or
@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.xml.XMLConstants;
 import javax.xml.namespace.NamespaceContext;
@@ -30,12 +31,14 @@ import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
+import org.apache.xpath.domapi.XPathEvaluatorImpl;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.w3c.dom.xpath.XPathResult;
 
 /**
  * This class provides methods to get information out of an XML document.
@@ -46,20 +49,83 @@ public class XmlParser {
 
 	XPath xPath = XPathFactory.newInstance().newXPath();
 
-
+	
 	/**
 	 * Get the result of a XPath expression as List<String>
 	 * @param document						the xml document that contains the element to parse
 	 * @param xpath							the xpath which leads to the element in the XML document for which the value should be returned
+	 * @param returnNull					a boolean indicating wether to return null or not if no match was found
 	 * @return								a List<String> containing one or more results or null if no result is found.
 	 * @throws XPathExpressionException
 	 */
 	public List<String> getXpathResult(Document document, String xpath, boolean returnNull) throws XPathExpressionException {
+
+		List<String> xpathResults = new ArrayList<String>();
+		//xPath.setNamespaceContext(new Namespaces(document));
+		
+		// Set namespaces to root element
+		Namespaces namespaces = new Namespaces(document);
+		Element rootElement = (Element)document.getFirstChild();
+		for (Entry<String, String> namespace : namespaces.namesValues.entrySet()) {
+			rootElement.setAttribute("xmlns:" + namespace.getKey(), namespace.getValue());
+		}
+		
+		// Evaluate xPath with Xalan. This is because we can use "ANY_TYPE" as a return type and check later for the real return type.
+		// This is necessary to for generic use of different xPath expressions, e. g. concat() returns String and not Element-Nodes.
+		XPathEvaluatorImpl xPathEvaluatorImpl = new XPathEvaluatorImpl();
+		
+		XPathResult result = (XPathResult)xPathEvaluatorImpl.evaluate(xpath, document, xPathEvaluatorImpl.createNSResolver(document), org.w3c.dom.xpath.XPathResult.ANY_TYPE, null);
+		short resultType = result.getResultType();
+		
+		if (resultType == org.w3c.dom.xpath.XPathResult.UNORDERED_NODE_ITERATOR_TYPE) {
+			Node node = null;
+			while ((node = result.iterateNext()) != null) {
+				if (isTextNode(node)) {
+					String textNodeValue = (node.getNodeValue() != null) ? node.getNodeValue().trim() : null;
+					if (!returnNull && textNodeValue != null && !textNodeValue.trim().isEmpty()) {
+						xpathResults.add(textNodeValue);
+					} else if (returnNull) {
+						xpathResults.add(null);
+					}
+				} else {
+					NodeList nodeList = node.getChildNodes();
+					if (nodeList.getLength() > 0) {
+						for (int i = 0; i < nodeList.getLength(); i++) {
+							String xpathResult = (nodeList.item(i).getTextContent() == null || nodeList.item(i).getTextContent().trim().isEmpty()) ? null : nodeList.item(i).getTextContent().trim();
+							if (!returnNull && xpathResult != null && !xpathResult.trim().isEmpty()) {
+								xpathResults.add(xpathResult);
+							} else if (returnNull) {
+								xpathResults.add(null);
+							}
+						}
+					}
+				}
+			}
+		} else if (resultType == org.w3c.dom.xpath.XPathResult.STRING_TYPE) {
+			String resultStringValue = (result.getStringValue() != null) ? result.getStringValue().trim() : null;
+			if (!returnNull && resultStringValue != null && !resultStringValue.trim().isEmpty()) {
+				xpathResults.add(resultStringValue);
+			} else if (returnNull) {
+				xpathResults.add(null);
+			}
+		} else if (resultType == org.w3c.dom.xpath.XPathResult.NUMBER_TYPE) {
+			xpathResults.add(String.valueOf(result.getNumberValue()));
+		}
+
+		if (xpathResults.isEmpty()) {
+			xpathResults = null;
+		}
+		
+		return xpathResults;
+		
+		
+		/*
+		// Former Version with javax - we can't use concat() with this code:
 		List<String> xpathResults = null;
 		xPath.setNamespaceContext(new Namespaces(document));
-
 		XPathExpression xPathExpression = xPath.compile(xpath);
 		NodeList nodeList = (NodeList)xPathExpression.evaluate(document, XPathConstants.NODESET);
+
 		if (nodeList.getLength() > 0) {
 			xpathResults = new ArrayList<String>();
 			for (int i = 0; i < nodeList.getLength(); i++) {
@@ -72,8 +138,32 @@ public class XmlParser {
 			}
 		}
 		return xpathResults;
+		*/
 	}
 
+	
+	/**
+	 * Check if the node is a Text node
+	 * 
+	 * @param 	node		Node object
+	 * @return	boolean
+	 */
+	static boolean isTextNode(Node node) {
+		boolean returnValue = false;
+
+		if (node != null) {
+			short nodeType = node.getNodeType();
+			if (nodeType == Node.CDATA_SECTION_NODE || nodeType == Node.TEXT_NODE) {
+				returnValue = true;
+			} else {
+				returnValue = false;
+			}
+		}
+
+		return returnValue;
+	}
+
+	
 	/**
 	 * Gets the text value (content) of one XML element. If xpath-expression finds more than one element, only the first text-value will be returned. Returns null if nothing was found.
 	 * 
@@ -95,6 +185,7 @@ public class XmlParser {
 		return textValue;
 	}
 
+	
 	/**
 	 * Gets the text value (content) of one or more XML elements. If xpath-expression finds more than one element, all text-values will be returned in List<String>. Returns null if nothing was found.
 	 * 
@@ -122,7 +213,6 @@ public class XmlParser {
 
 		return textValues;
 	}
-
 
 
 	/**
@@ -186,6 +276,7 @@ public class XmlParser {
 		return attributeValues;
 	}
 
+	
 	/**
 	 * Gets the number of nods of the given xPath expression. 
 	 * 
@@ -253,7 +344,7 @@ public class XmlParser {
 			}
 		}
 
-		
+
 		/**
 		 * Methods not needed
 		 */
