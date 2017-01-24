@@ -153,14 +153,14 @@ public class XmlMerger {
 				
 				// Open the XML-start-tag and add it to a String variable
 				fullXmlString += "<" + qName;
-				
+								
 				// Loop over any XML attribute and add it the XML-start-tag
 				for (int a = 0; a < atts.getLength(); a++) {
 					String attQName = atts.getQName(a);
 					String attValue = StringEscapeUtils.escapeXml10(atts.getValue(a));
 
-					// Add the xsi namespace if appropriate:
-					if (attQName.contains("xsi:")) {
+					// Add the xsi namespace if appropriate (only if attQName contains "xsi" and the xsi-Namespace was not already defined):
+					if (attQName.contains("xsi:") && atts.getIndex("xmlns:xsi") == -1) {
 						fullXmlString += " xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"";
 					}
 					fullXmlString += " " + attQName + "=\"" + attValue + "\"";
