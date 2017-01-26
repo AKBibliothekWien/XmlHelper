@@ -33,15 +33,18 @@ public class XmlValidator {
 			// End parsing:
 			returnValue = true;
 		} catch (SAXException e) {
-			e.printStackTrace();
+			//e.printStackTrace();
+			System.err.println(e.getLocalizedMessage());
 			returnValue = false;
 			return returnValue;
 		} catch (IOException e) {
-			e.printStackTrace();
+			//e.printStackTrace();
+			System.err.println(e.getLocalizedMessage());
 			returnValue = false;
 			return returnValue;
 		} catch (Exception e) {
-			e.printStackTrace();
+			//e.printStackTrace();
+			System.err.println(e.getLocalizedMessage());
 			returnValue = false;
 			return returnValue;
 		}

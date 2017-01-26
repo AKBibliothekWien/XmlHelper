@@ -33,7 +33,7 @@ public class XmlCleaner {
 			return isCleaningDone;
 		}
 		
-		System.out.println("Beginning XML cleaning. Please wait ...");
+		System.out.println("Begin cleaning of XML file " + pathToXmlFile + ". Please wait ...");
 
 		File xmlFile = new File(pathToXmlFile);
 
