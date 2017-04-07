@@ -29,12 +29,12 @@ public class XmlMerger {
 		File fDestinationFile = new File(destinationFile);
 		
 		if (fSourceDirectory.getAbsolutePath().equals(fDestinationFile.getParent())) {
-			System.err.println("WARNING: Stopped merging process.\nIt's not possible to save the destination file in the source directory. Please specify another path for your destination file!");
+			System.err.println("WARNING: Stopped merging process.\nIt's not possible to save the destination file " + fDestinationFile.getAbsolutePath() + " in the source directory " + fSourceDirectory.getAbsolutePath() + ". Please specify another path for your destination file!");
 			return isMergingSuccessful;
 		}
 
 		if (!fSourceDirectory.exists()) {
-			System.err.println("WARNING: Stopped merging process.\nDirectory with multiple xml files does not exist!");
+			System.err.println("WARNING: Stopped merging process.\nDirectory " + fSourceDirectory.getAbsolutePath() + " does not exist!");
 			return isMergingSuccessful;
 		}
 
