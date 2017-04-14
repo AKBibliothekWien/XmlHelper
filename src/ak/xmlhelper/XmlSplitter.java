@@ -160,6 +160,7 @@ public class XmlSplitter {
 
 			if (isFilenameNode) {
 				this.fileName = this.textContent.replaceAll("\\W", "").trim(); // Remove all characters that are not A-Z, a-z or 0-9 for filename
+				isFilenameNode = false; // Immediately reset to false as we now have already a filename. If not, we could end up with an empty filename if the filename-node is at the last position of the XML!
 			}
 
 			if ((localName.equals(this.nodeNameToExtract) || this.isRequestedElement == true) && this.counter >= this.nodeCount) {
@@ -189,8 +190,6 @@ public class XmlSplitter {
 
 					if (this.element != null && !this.element.isEmpty()) {
 						this.element = this.element.replaceAll("\\>\\s+\\<", "><"); // Remove whitespaces between XML tags
-						//System.out.println(this.element); // Final single element
-
 
 						if ((this.fileName != null && !this.fileName.isEmpty()) && this.destinationDirectory.exists()) {
 							try {
@@ -199,7 +198,6 @@ public class XmlSplitter {
 								this.fileWriter = new FileWriter(file);
 								this.fileWriter.write(this.element);
 								this.fileWriter.close();
-								//System.out.println("File written to: " + this.destinationDirectory.getAbsolutePath() + File.separator + this.fileName + ".xml");
 							} catch (IOException e) {
 								e.printStackTrace();
 							}
@@ -210,7 +208,6 @@ public class XmlSplitter {
 					this.fileName = "";  // Reset filename String
 				}
 			}
-
 		}
 
 		
@@ -243,5 +240,4 @@ public class XmlSplitter {
 		@Override public void startPrefixMapping(String prefix, String uri) throws SAXException {}
 		@Override public void endPrefixMapping(String prefix) throws SAXException {}
 	}
-
 }
