@@ -1,19 +1,3 @@
-/**
-_mv * This file is part of GoobiOaiHelper.
- * 
- * GoobiOaiHelper is free software: you can redistribute it and/or modify
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * GoobiOaiHelper is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with GoobiOaiHelper.  If not, see <http://www.gnu.org/licenses/>.
- */
-
 package ak.xmlhelper;
 
 import java.util.ArrayList;
@@ -31,7 +15,6 @@ import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
-import org.apache.xpath.NodeSet;
 import org.apache.xpath.domapi.XPathEvaluatorImpl;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
@@ -118,28 +101,6 @@ public class XmlParser {
 		}
 		
 		return xpathResults;
-		
-		
-		/*
-		// Former Version with javax - we can't use concat() with this code:
-		List<String> xpathResults = null;
-		xPath.setNamespaceContext(new Namespaces(document));
-		XPathExpression xPathExpression = xPath.compile(xpath);
-		NodeList nodeList = (NodeList)xPathExpression.evaluate(document, XPathConstants.NODESET);
-
-		if (nodeList.getLength() > 0) {
-			xpathResults = new ArrayList<String>();
-			for (int i = 0; i < nodeList.getLength(); i++) {
-				String xpathResult = (nodeList.item(i).getTextContent() == null || nodeList.item(i).getTextContent().trim().isEmpty()) ? null : nodeList.item(i).getTextContent().trim();
-				if (!returnNull && xpathResult != null) {
-					xpathResults.add(xpathResult);
-				} else if (returnNull) {
-					xpathResults.add(xpathResult);
-				}
-			}
-		}
-		return xpathResults;
-		*/
 	}
 	
 	
@@ -166,7 +127,6 @@ public class XmlParser {
 	 */
 	static boolean isTextNode(Node node) {
 		boolean returnValue = false;
-
 		if (node != null) {
 			short nodeType = node.getNodeType();
 			if (nodeType == Node.CDATA_SECTION_NODE || nodeType == Node.TEXT_NODE) {
@@ -175,7 +135,6 @@ public class XmlParser {
 				returnValue = false;
 			}
 		}
-
 		return returnValue;
 	}
 
@@ -303,16 +262,19 @@ public class XmlParser {
 	 */
 	public int countNodes(Document document, String xpath) throws XPathExpressionException {
 		int noOfNodes = 0;
-
 		XPathExpression xPathExpression = xPath.compile(xpath);
 		NodeList nodeList = (NodeList)xPathExpression.evaluate(document, XPathConstants.NODESET);
 		noOfNodes = nodeList.getLength();
-
 		return noOfNodes;
 	}
 
 
 
+	/**
+	 * Namespace class
+	 * @author Michael Birkner
+	 *
+	 */
 	public class Namespaces implements NamespaceContext {
 		private Map<String, String> valuesNames = new HashMap<String, String>();
 		private Map<String, String> namesValues = new HashMap<String, String>();
@@ -360,18 +322,10 @@ public class XmlParser {
 			}
 		}
 
-
 		/**
 		 * Methods not needed
 		 */
-		public String getPrefix(String namespaceURI) {
-			return valuesNames.get(namespaceURI);
-		}
-		public Iterator<?> getPrefixes(String namespaceURI) {
-			return null;
-		}
-
+		public String getPrefix(String namespaceURI) { return valuesNames.get(namespaceURI); }
+		public Iterator<?> getPrefixes(String namespaceURI) { return null; }
 	}
-
-
 }
