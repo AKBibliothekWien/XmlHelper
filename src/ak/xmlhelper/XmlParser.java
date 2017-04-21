@@ -31,6 +31,7 @@ import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
+import org.apache.xpath.NodeSet;
 import org.apache.xpath.domapi.XPathEvaluatorImpl;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
@@ -139,6 +140,21 @@ public class XmlParser {
 		}
 		return xpathResults;
 		*/
+	}
+	
+	
+	/**
+	 * Get a W3C DOM Node by using xPath
+	 * @param document		A W3C DOM document
+	 * @param xPathString	The xPath to use
+	 * @return				A W3C DOM Node
+	 * @throws XPathExpressionException
+	 */
+	public Node getNodesByXpath(Document document, String xPathString) throws XPathExpressionException {		
+		xPath.setNamespaceContext(new Namespaces(document));
+		XPathExpression xPathExpression = xPath.compile(xPathString);
+		Node result = (Node)xPathExpression.evaluate(document, XPathConstants.NODE);
+		return result;
 	}
 
 	
