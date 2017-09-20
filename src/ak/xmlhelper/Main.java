@@ -2,6 +2,7 @@ package ak.xmlhelper;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -17,6 +18,8 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.io.FileUtils;
 
+import ak.xmlhelper.classes.XmlField;
+
 public class Main {
 
 	// CLI options
@@ -24,7 +27,6 @@ public class Main {
 	static OptionGroup optionGroup = new OptionGroup();
 
 	public static void main(String[] args) {
-
 
 		CommandLineParser clParser = new DefaultParser();
 
@@ -83,18 +85,36 @@ public class Main {
 				.numberOfArgs(4)
 				.build();
 
+		// w: countWithin
+		Option oCountWithin = Option
+				.builder("w")
+				.required(true)
+				.longOpt("count")
+				.desc("Count XML elements within another XML element in a XML file. args:"
+						+ "\n 1. Path to XML file"
+						+ "\n 2. Name of XML tag to be counted. E. g. if you want to count <name>...</name> tags, use \"name\"."
+						+ "\n 3. Name of the attribute in the XML tag you want to count or \"null\". E. g. if you want to count all <name attr=\"...\" /> tags, use \"attr\"."
+						+ "\n 4. Value of the attribute in the XML tag you want to count or \"null\". E. g. if you want to count all <name attr=\"value\" /> tags, use \"value\"."
+						+ "\n 5. Name of XML tag the other XML element should be counted in. E. c. if you want to count the \"name\" tags in a structure like <record> <name>...</name> <name>...</name> </record>, specify \"record\"."
+						+ "\n 6. A semicolon separated list of comma separated lists that consists of a tag name, attribute name and attribute value, for which the content should be printed, e. g. \"controlfied,tag,001;controlfied,tag,002\"."
+						+ "\n 7. Path to a text file where the output should be written, e. g. \"/home/username/myresults.txt\".")
+						
+				.hasArgs()
+				.numberOfArgs(7)
+				.build();
+
 		// l: cLean
-				Option oClean= Option
-						.builder("l")
-						.required(true)
-						.longOpt("clean")
-						.desc("Clean XML syntax (removing forbidden characters) in a given XML-file(s). args:"
-								+ "\n 1. Path to XML file(s). This could be a single file with the ending \".xml\" or a directory with multiple XML files."
-								+ "\n 2. \"true\" if you want to save the cleaned data to the same file (the original will be lost!), \"false\" otherwise.")
-						.hasArgs()
-						.numberOfArgs(2)
-						.build();
-				
+		Option oClean= Option
+				.builder("l")
+				.required(true)
+				.longOpt("clean")
+				.desc("Clean XML syntax (removing forbidden characters) in a given XML-file(s). args:"
+						+ "\n 1. Path to XML file(s). This could be a single file with the ending \".xml\" or a directory with multiple XML files."
+						+ "\n 2. \"true\" if you want to save the cleaned data to the same file (the original will be lost!), \"false\" otherwise.")
+				.hasArgs()
+				.numberOfArgs(2)
+				.build();
+
 		// h: help
 		Option oHelp = Option
 				.builder("h")
@@ -107,6 +127,7 @@ public class Main {
 		optionGroup.addOption(oMerge);
 		optionGroup.addOption(oSplit);
 		optionGroup.addOption(oCount);
+		optionGroup.addOption(oCountWithin);
 		optionGroup.addOption(oClean);
 		optionGroup.addOption(oHelp);
 		options.addOptionGroup(optionGroup);
@@ -274,9 +295,42 @@ public class Main {
 				}
 				break;
 			}
+
+			case "w": {
+				System.out.println("Start counting XML elements within another XML element.");
+				String[] countWithinArgs = cmd.getOptionValues("w");
+
+				String xmlFile = (countWithinArgs[0] != null) ? countWithinArgs[0] : null;
+				String tagNameCount = (countWithinArgs[1] != null) ? countWithinArgs[1] : null;
+				String attrNameCount = (countWithinArgs[2] != null && !countWithinArgs[2].equals("null")) ? countWithinArgs[2] : null;
+				String attrValueCount = (countWithinArgs[3] != null && !countWithinArgs[3].equals("null")) ? countWithinArgs[3] : null;
+				String tagNameCountWithin = (countWithinArgs[4] != null) ? countWithinArgs[4] : null;
+				String tagNamesOutStr = (countWithinArgs[5] != null) ? countWithinArgs[5] : null;
+				List<String> allOuts = Arrays.asList(tagNamesOutStr.split("\\s*;\\s*"));
+				ArrayList<XmlField> xmlFields = new ArrayList<XmlField>();
+				String outFile = (countWithinArgs[6] != null) ? countWithinArgs[6] : null;
+
+				for(String allOut : allOuts) {
+					List<String> tagAttrValue = Arrays.asList(allOut.split("\\s*,\\s*"));
+					String tagName = (tagAttrValue.get(0) != null) ? tagAttrValue.get(0) : null;
+					String attrName = (tagAttrValue.get(1) != null && !tagAttrValue.get(1).equals("null")) ? tagAttrValue.get(1) : null;
+					String attrValue = (tagAttrValue.get(2) != null && !tagAttrValue.get(2).equals("null")) ? tagAttrValue.get(2) : null;
+					XmlField xmlField = new XmlField(tagName, attrName, attrValue);
+					xmlFields.add(xmlField);
+				}				
+				
+				if (xmlFile != null && tagNameCount != null && tagNameCountWithin != null) {
+					XmlCounter xmlc = new XmlCounter();
+					int noOfElements = xmlc.countWithin(xmlFile, tagNameCount, attrNameCount, attrValueCount, tagNameCountWithin, xmlFields, outFile);
+					System.out.print("                                                                                              \r");
+					System.out.print("\nTotal elements: " + noOfElements + "\n");
+				}
+				
+				break;
+			}
 			
 			case "l": {
-				
+
 				System.out.println("\nStart cleaning XML file(s).");
 				String[] cleanArgs = cmd.getOptionValues("l");
 
@@ -285,7 +339,7 @@ public class Main {
 				XmlCleaner xmlcl = new XmlCleaner();
 				xmlcl.cleanXml(xmlFile, saveToSameFile);
 				System.out.println("Path to cleaned file(s): " + xmlcl.getCleanedFile());
-				
+
 				break;
 			}
 
@@ -293,12 +347,6 @@ public class Main {
 		} catch (ParseException e) {
 			e.printStackTrace();
 		}
-
-
-
-
-
-
 	}
 
 }
