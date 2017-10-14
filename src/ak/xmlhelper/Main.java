@@ -48,7 +48,7 @@ public class Main {
 				.desc("Merge multiple XML files to one single XML file. Args:"
 						+ "\n 1. PathToFiles"
 						+ "\n 2. ElementToMerge (e. g. \"record\")"
-						+ "\n 3. ElementLevel (for nested elements with same name. 0 for top level, 1 for first level, ...)"
+						+ "\n 3. ElementLevel (for nested elements with same name. 1 for top (= first) level, 2 for second level, ...)"
 						+ "\n 4. NewFile"
 						+ "\n 5. NewXmlParentElement (e. g. \"collection\")")
 				.hasArgs()
