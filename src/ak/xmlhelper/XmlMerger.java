@@ -24,7 +24,7 @@ public class XmlMerger {
 
 	public boolean mergeElements(String sourceDirectory, String destinationFile, String parentElement, String elementToMerge, int elementLevel) {
 		boolean isMergingSuccessful = false;
-
+		
 		File fSourceDirectory = new File(sourceDirectory);
 		File fDestinationFile = new File(destinationFile);
 		
@@ -99,6 +99,7 @@ public class XmlMerger {
 	}
 
 	
+	
 	/**
 	 * Content Handler for merging XML elements.
 	 */
@@ -112,6 +113,7 @@ public class XmlMerger {
 		int elementLevelCounter = 0;
 		boolean withinElement = false;
 
+		
 		/**
 		 * Constructor for the Content Handler that helps merging XML elements.
 		 * 
@@ -135,8 +137,8 @@ public class XmlMerger {
 			// Clear the element content variable (= text of XML element). If not, there will be problems with html-encoded characters (&lt;) at character()-method:
 			elementContent = "";
 
-
 			if(localName.equals(elementToMerge)) {
+
 				// We encounter the given element, so we count it's level
 				elementLevelCounter = elementLevelCounter + 1;
 								
@@ -145,12 +147,11 @@ public class XmlMerger {
 					
 					// Set a variable that tells us that we are within the appropriate element
 					withinElement = true;
-				}			
+				}
 			}
 
-
 			if (withinElement) {
-				
+
 				// Open the XML-start-tag and add it to a String variable
 				fullXmlString += "<" + qName;
 								
@@ -213,8 +214,7 @@ public class XmlMerger {
 					fullXmlString = "";
 				}
 			}
-		}
-		
+		}	
 
 
 		/**
@@ -225,43 +225,32 @@ public class XmlMerger {
 		public void characters(char[] ch, int start, int length) throws SAXException {			
 			elementContent += new String(ch, start, length);
 		}
-			
-		
-		
 		
 
 		// Other methods that are not used at the moment
 		@Override
-		public void setDocumentLocator(Locator locator) {
-		}
+		public void setDocumentLocator(Locator locator) {}
 
 		@Override
-		public void startDocument() throws SAXException {
-		}
+		public void startDocument() throws SAXException {}
 
 		@Override
-		public void endDocument() throws SAXException {
-		}
+		public void endDocument() throws SAXException {}
 
 		@Override
-		public void startPrefixMapping(String prefix, String uri) throws SAXException {
-		}
+		public void startPrefixMapping(String prefix, String uri) throws SAXException {}
 
 		@Override
-		public void endPrefixMapping(String prefix) throws SAXException {
-		}
+		public void endPrefixMapping(String prefix) throws SAXException {}
 
 		@Override
-		public void ignorableWhitespace(char[] ch, int start, int length) throws SAXException {
-		}
+		public void ignorableWhitespace(char[] ch, int start, int length) throws SAXException {}
 
 		@Override
-		public void processingInstruction(String target, String data) throws SAXException {
-		}
+		public void processingInstruction(String target, String data) throws SAXException {}
 
 		@Override
-		public void skippedEntity(String name) throws SAXException {
-		}
+		public void skippedEntity(String name) throws SAXException {}
 
 	}
 
