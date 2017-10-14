@@ -45,7 +45,7 @@ public class Main {
 				.builder("m")
 				.required(true)
 				.longOpt("merge")
-				.desc("Merge multiple XML files to one single XML file. Works only wiht XML-files containing one single XML element. args:"
+				.desc("Merge multiple XML files to one single XML file. Args:"
 						+ "\n 1. PathToFiles"
 						+ "\n 2. ElementToMerge (e. g. \"record\")"
 						+ "\n 3. ElementLevel (for nested elements with same name. 0 for top level, 1 for first level, ...)"
@@ -89,7 +89,7 @@ public class Main {
 		Option oCountWithin = Option
 				.builder("w")
 				.required(true)
-				.longOpt("count")
+				.longOpt("count-within")
 				.desc("Count XML elements within another XML element in a XML file. args:"
 						+ "\n 1. Path to XML file"
 						+ "\n 2. Name of XML tag to be counted. E. g. if you want to count <name>...</name> tags, use \"name\"."
