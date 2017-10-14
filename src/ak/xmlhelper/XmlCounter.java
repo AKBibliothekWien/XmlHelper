@@ -261,12 +261,15 @@ public class XmlCounter {
 		@Override
 		public void endDocument() throws SAXException {
 			try {
-				this.bufferFileWriter.close();
+				if (this.bufferFileWriter != null) {
+					this.bufferFileWriter.close();
+				}
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
 		}
 
+		
 		@Override
 		public void ignorableWhitespace(char[] ch, int start, int length) throws SAXException {}
 
