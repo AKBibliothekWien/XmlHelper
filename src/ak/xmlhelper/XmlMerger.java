@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
@@ -20,14 +21,14 @@ import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.XMLReaderFactory;
 
 public class XmlMerger {
-	
+
 
 	public boolean mergeElements(String sourceDirectory, String destinationFile, String parentElement, String elementToMerge, int elementLevel) {
 		boolean isMergingSuccessful = false;
-		
+
 		File fSourceDirectory = new File(sourceDirectory);
 		File fDestinationFile = new File(destinationFile);
-		
+
 		if (fSourceDirectory.getAbsolutePath().equals(fDestinationFile.getParent())) {
 			System.err.println("WARNING: Stopped merging process.\nIt's not possible to save the destination file " + fDestinationFile.getAbsolutePath() + " in the source directory " + fSourceDirectory.getAbsolutePath() + ". Please specify another path for your destination file!");
 			return isMergingSuccessful;
@@ -39,8 +40,20 @@ public class XmlMerger {
 		}
 
 		String fileName = null;
-		
+
 		try {
+			// Get XML files that should be merged
+			File[] files = fSourceDirectory.listFiles(new FilenameFilter() {
+				public boolean accept(File dir, String name) {
+					return name.toLowerCase().endsWith(".xml");
+				}
+			});
+			
+			// If we have no files to merge, stop the process
+			if (files.length <= 0) {
+				return true;
+			}
+			
 			// Create SAX parser:
 			XMLReader xmlReader = XMLReaderFactory.createXMLReader();
 
@@ -57,31 +70,30 @@ public class XmlMerger {
 
 			// Add XML intro tag
 			writer.println("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
-			
+
 			// Open with given parent element
 			writer.println("<" + parentElement + ">");
-			
+
 			// Sort files for proper iteration
-			File[] files = fSourceDirectory.listFiles();
 			Arrays.sort(files);
-			
+
 			// Iterate over files that should be merged
 			for (File xmlFile : files) {
 				// Specify XML-file to parse
 				fileName = xmlFile.getAbsolutePath();
 				FileReader reader = new FileReader(xmlFile);
 				InputSource inputSource = new InputSource(reader);
-				
+
 				// Start parsing
 				xmlReader.parse(inputSource);
 			}
-			
+
 			// Close given parent element
 			writer.println("</" + parentElement + ">");
 
 			// Close the writer
 			if (writer!=null) { writer.close(); }
-			
+
 			isMergingSuccessful = true;
 
 		} catch (FileNotFoundException e) {
@@ -98,8 +110,8 @@ public class XmlMerger {
 		return isMergingSuccessful;
 	}
 
-	
-	
+
+
 	/**
 	 * Content Handler for merging XML elements.
 	 */
@@ -113,7 +125,7 @@ public class XmlMerger {
 		int elementLevelCounter = 0;
 		boolean withinElement = false;
 
-		
+
 		/**
 		 * Constructor for the Content Handler that helps merging XML elements.
 		 * 
@@ -127,7 +139,7 @@ public class XmlMerger {
 			this.writer = writer;
 		}
 
-		
+
 		/**
 		 * Encounters start of element.<br><br>
 		 * {@inheritDoc}
@@ -141,10 +153,10 @@ public class XmlMerger {
 
 				// We encounter the given element, so we count it's level
 				elementLevelCounter = elementLevelCounter + 1;
-								
+
 				// We encounter the given element at the appropriate level
 				if (elementLevelCounter == elementLevel) {
-					
+
 					// Set a variable that tells us that we are within the appropriate element
 					withinElement = true;
 				}
@@ -154,7 +166,7 @@ public class XmlMerger {
 
 				// Open the XML-start-tag and add it to a String variable
 				fullXmlString += "<" + qName;
-								
+
 				// Loop over any XML attribute and add it the XML-start-tag
 				for (int a = 0; a < atts.getLength(); a++) {
 					String attQName = atts.getQName(a);
@@ -166,12 +178,12 @@ public class XmlMerger {
 					}
 					fullXmlString += " " + attQName + "=\"" + attValue + "\"";
 				}
-				
+
 				// Close the XML-start-tag and add it to a String variable
 				fullXmlString += ">";
 			}
 		}
-		
+
 
 		/**
 		 * Encounters end of element.<br><br>
@@ -182,34 +194,34 @@ public class XmlMerger {
 
 			// Get the text content of the XML element
 			String content = elementContent.toString();
-			
+
 			if (withinElement) {
 				// Add the escaped content to a String variable
 				fullXmlString += StringEscapeUtils.escapeXml10(content);
-				
+
 				// Reset the content variable for a fresh start
 				elementContent = "";
-				
+
 				// Add the XML-end-tag to a String variable
 				fullXmlString += "</" + qName + ">";
-				
+
 			}
-			
+
 			if(localName.equals(elementToMerge) ) {
-				
+
 				// We encounter the end of the given element, so we decrease the level counter
 				elementLevelCounter = elementLevelCounter - 1;
-				
+
 				if (elementLevelCounter < elementLevel) {
-					
+
 					// Set a variable that tells us that we are not within the appropriate element
 					withinElement = false;
-					
+
 					// Write the XML string to the file if it's not empty
 					if (!fullXmlString.trim().isEmpty()) {
 						writer.println(fullXmlString);
 					}
-					
+
 					// Reset the String for the full XML for a fresh start
 					fullXmlString = "";
 				}
@@ -225,7 +237,7 @@ public class XmlMerger {
 		public void characters(char[] ch, int start, int length) throws SAXException {			
 			elementContent += new String(ch, start, length);
 		}
-		
+
 
 		// Other methods that are not used at the moment
 		@Override
