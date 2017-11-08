@@ -117,6 +117,21 @@ public class XmlParser {
 		Node result = (Node)xPathExpression.evaluate(document, XPathConstants.NODE);
 		return result;
 	}
+	
+	
+	/**
+	 * Get a W3C DOM NodeList by using xPath
+	 * @param document		A W3C DOM document
+	 * @param xPathString	The xPath to use
+	 * @return				A W3C DOM NodeList
+	 * @throws XPathExpressionException
+	 */
+	public NodeList getNodesByXpath(Document document, String xPathString) throws XPathExpressionException {		
+		xPath.setNamespaceContext(new Namespaces(document));
+		XPathExpression xPathExpression = xPath.compile(xPathString);
+		NodeList result = (NodeList)xPathExpression.evaluate(document, XPathConstants.NODESET);
+		return result;
+	}
 
 	
 	/**
