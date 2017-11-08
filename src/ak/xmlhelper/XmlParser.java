@@ -111,7 +111,7 @@ public class XmlParser {
 	 * @return				A W3C DOM Node
 	 * @throws XPathExpressionException
 	 */
-	public Node getNodesByXpath(Document document, String xPathString) throws XPathExpressionException {		
+	public Node getNodeByXpath(Document document, String xPathString) throws XPathExpressionException {		
 		xPath.setNamespaceContext(new Namespaces(document));
 		XPathExpression xPathExpression = xPath.compile(xPathString);
 		Node result = (Node)xPathExpression.evaluate(document, XPathConstants.NODE);
