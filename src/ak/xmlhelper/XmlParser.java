@@ -9,6 +9,8 @@ import java.util.Map.Entry;
 
 import javax.xml.XMLConstants;
 import javax.xml.namespace.NamespaceContext;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpression;
@@ -24,6 +26,18 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.xpath.XPathResult;
 
+import net.sf.saxon.s9api.DOMDestination;
+import net.sf.saxon.s9api.DocumentBuilder;
+import net.sf.saxon.s9api.Processor;
+import net.sf.saxon.s9api.SaxonApiException;
+import net.sf.saxon.s9api.XQueryCompiler;
+import net.sf.saxon.s9api.XQueryEvaluator;
+import net.sf.saxon.s9api.XQueryExecutable;
+import net.sf.saxon.s9api.XdmItem;
+import net.sf.saxon.s9api.XdmNode;
+import net.sf.saxon.s9api.XdmSequenceIterator;
+import net.sf.saxon.s9api.XdmValue;
+
 /**
  * This class provides methods to get information out of an XML document.
  * 
@@ -32,7 +46,49 @@ import org.w3c.dom.xpath.XPathResult;
 public class XmlParser {
 
 	XPath xPath = XPathFactory.newInstance().newXPath();
+	
+	/**
+	 * Get a document by xQuery in the format <result>[XQUERY-RESULT]</result>
+	 * 
+	 * @param inputDocument	Document: A default W3C DOM document
+	 * @param xQuery		String: A String representing an xQuery
+	 * @return				Document: A default W3C DOM document in the format <result>[XQUERY-RESULT]</result>
+	 */
+	public Document getXqueryResult(Document inputDocument, String xQuery) {
+		Document outputDocument = null;
+		try {
+			Processor saxon = new Processor(false);
+			DocumentBuilder db = saxon.newDocumentBuilder();
+			XdmNode xdmNode = db.wrap(inputDocument);
+			XQueryCompiler xQueryCompiler = saxon.newXQueryCompiler();
+			XQueryExecutable xQueryExecutable = xQueryCompiler.compile(xQuery);
+			XQueryEvaluator  xQueryEvaluator = xQueryExecutable.load();
+			xQueryEvaluator.setContextItem(xdmNode);
+			XdmValue xdmValue = xQueryEvaluator.evaluate();
 
+			// Create a default DOM document for the return value
+			if (xdmValue != null && xdmValue.size() > 0) {
+				// Create document with a root element called "<result>"
+				DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
+				documentBuilderFactory.setNamespaceAware(true);
+			    javax.xml.parsers.DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
+			    outputDocument = documentBuilder.newDocument();
+			    Element rootElement = outputDocument.createElement("result");
+			    outputDocument.appendChild(rootElement);
+			    
+			    // Insert the XQuery result to the "<result>" root element
+				DOMDestination destination = new DOMDestination(outputDocument.getDocumentElement());
+				saxon.writeXdmValue(xdmValue, destination);
+			}
+		} catch (SaxonApiException e) {
+			e.printStackTrace();
+		} catch (ParserConfigurationException e) {
+			e.printStackTrace();
+		}
+		
+		return outputDocument;
+	}
+	
 	
 	/**
 	 * Get the result of a XPath expression as List<String>
@@ -212,16 +268,16 @@ public class XmlParser {
 	/**
 	 * Gets the value of an attribute of one XML element as a String. If more than one XML element is found with xpath expression, only the attribute value of the first one is returned.
 	 *   
-	 * @param document		the xml document that contains the element to parse
+	 * @param object		the xml document or node that contains the element to parse
 	 * @param xpath			the xpath which leads to the element in the XML document for which the attribute value should be returned
 	 * @param attribute		the attribute for which the value should be returned
 	 * @return String		a String conaining the attribute value or null if nothing was found
 	 * @throws XPathExpressionException 
 	 */
-	public String getAttributeValue(Document document, String xpath, String attribute) throws XPathExpressionException {
+	public String getAttributeValue(Object object, String xpath, String attribute) throws XPathExpressionException {
 		String attributeValue = null;
 		XPathExpression xPathExpression = xPath.compile(xpath);
-		NodeList nodeList = (NodeList)xPathExpression.evaluate(document, XPathConstants.NODESET);
+		NodeList nodeList = (NodeList)xPathExpression.evaluate(object, XPathConstants.NODESET);
 
 		// Check if nodeList contains nodes to prevent NullPointerException. Instead of exception, just null should be returned.
 		if (nodeList.getLength() > 0) {
@@ -239,16 +295,16 @@ public class XmlParser {
 	/**
 	 * Gets the value of an attribute of one or more XML elements in a List<String>. If more than one element is found by xpath-expression, all values are returned.
 	 * 
-	 * @param document 			the xml document that contains the elements to parse
+	 * @param document 			the xml document or node that contains the elements to parse
 	 * @param xpath				the xpath which leads to the elements in the XML document for which the attribute values should be returned
 	 * @param attribute			the attribute for which the values should be returned
 	 * @return List<String>		a List<String> conaining the attribute value or null if nothing was found
 	 * @throws XPathExpressionException 
 	 */
-	public List<String> getAttributeValues(Document document, String xpath, String attribute) throws XPathExpressionException {
+	public List<String> getAttributeValues(Object object, String xpath, String attribute) throws XPathExpressionException {
 		List<String> attributeValues = new ArrayList<String>();
 		XPathExpression xPathExpression = xPath.compile(xpath);
-		NodeList nodeList = (NodeList)xPathExpression.evaluate(document, XPathConstants.NODESET);
+		NodeList nodeList = (NodeList)xPathExpression.evaluate(object, XPathConstants.NODESET);
 
 		// Check if nodeList contains nodes to prevent NullPointerException. Instead of exception, just null should be returned.
 		if (nodeList.getLength() > 0) {
