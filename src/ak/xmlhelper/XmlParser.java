@@ -106,30 +106,34 @@ public class XmlParser {
 	
 	/**
 	 * Get a W3C DOM Node by using xPath
-	 * @param document		A W3C DOM document
+	 * @param object		A W3C DOM document or node
 	 * @param xPathString	The xPath to use
 	 * @return				A W3C DOM Node
 	 * @throws XPathExpressionException
 	 */
-	public Node getNodeByXpath(Document document, String xPathString) throws XPathExpressionException {		
-		xPath.setNamespaceContext(new Namespaces(document));
+	public Node getNodeByXpath(Object object, String xPathString) throws XPathExpressionException {
+		if (object instanceof Document) {
+			xPath.setNamespaceContext(new Namespaces((Document)object));
+		}
 		XPathExpression xPathExpression = xPath.compile(xPathString);
-		Node result = (Node)xPathExpression.evaluate(document, XPathConstants.NODE);
+		Node result = (Node)xPathExpression.evaluate(object, XPathConstants.NODE);
 		return result;
 	}
 	
 	
 	/**
 	 * Get a W3C DOM NodeList by using xPath
-	 * @param document		A W3C DOM document
+	 * @param object		A W3C DOM document or node
 	 * @param xPathString	The xPath to use
 	 * @return				A W3C DOM NodeList
 	 * @throws XPathExpressionException
 	 */
-	public NodeList getNodesByXpath(Document document, String xPathString) throws XPathExpressionException {		
-		xPath.setNamespaceContext(new Namespaces(document));
+	public NodeList getNodesByXpath(Object object, String xPathString) throws XPathExpressionException {
+		if (object instanceof Document) {
+			xPath.setNamespaceContext(new Namespaces((Document)object));
+		}
 		XPathExpression xPathExpression = xPath.compile(xPathString);
-		NodeList result = (NodeList)xPathExpression.evaluate(document, XPathConstants.NODESET);
+		NodeList result = (NodeList)xPathExpression.evaluate(object, XPathConstants.NODESET);
 		return result;
 	}
 
@@ -157,15 +161,15 @@ public class XmlParser {
 	/**
 	 * Gets the text value (content) of one XML element. If xpath-expression finds more than one element, only the first text-value will be returned. Returns null if nothing was found.
 	 * 
-	 * @param document	the xml document that contains the element to parse
-	 * @param xpath		the xpath which leads to the element in the XML document for which the text value should be returned
+	 * @param object	the xml document or node that contains the element to parse
+	 * @param xpath		the xpath which leads to the element in the XML document or node for which the text value should be returned
 	 * @return			a String or null if nothing was found
 	 * @throws XPathExpressionException
 	 */
-	public String getTextValue(Document document, String xpath) throws XPathExpressionException {
+	public String getTextValue(Object object, String xpath) throws XPathExpressionException {
 		String textValue = null;
 		XPathExpression xPathExpression = xPath.compile(xpath+"/text()");
-		NodeList nodeList = (NodeList)xPathExpression.evaluate(document, XPathConstants.NODESET);
+		NodeList nodeList = (NodeList)xPathExpression.evaluate(object, XPathConstants.NODESET);
 
 		// Check if nodeList contains nodes to prevent NullPointerException for nodes with no text (for them, text() is not applicable):
 		if (nodeList.getLength() > 0) {
@@ -179,17 +183,17 @@ public class XmlParser {
 	/**
 	 * Gets the text value (content) of one or more XML elements. If xpath-expression finds more than one element, all text-values will be returned in List<String>. Returns null if nothing was found.
 	 * 
-	 * @param document			the xml document that contains the elements to parse
-	 * @param xpath				the xpath which leads to the elements in the XML document for which the text value should be returned
+	 * @param object			the xml document or node that contains the elements to parse
+	 * @param xpath				the xpath which leads to the elements in the XML document or node for which the text value should be returned
 	 * @return List<String>		a List<String> or null if nothing was found
 	 * @throws XPathExpressionException
 	 */
-	public List<String> getTextValues(Document document, String xpath) throws XPathExpressionException {
+	public List<String> getTextValues(Object object, String xpath) throws XPathExpressionException {
 		List<String> textValues = new ArrayList<String>();
 		String textValue = null;
 
 		XPathExpression xPathExpression = xPath.compile(xpath+"/text()");
-		NodeList nodeList = (NodeList)xPathExpression.evaluate(document, XPathConstants.NODESET);
+		NodeList nodeList = (NodeList)xPathExpression.evaluate(object, XPathConstants.NODESET);
 
 		// Check if nodeList contains nodes to prevent NullPointerException for nodes with no text (for them, text() is not applicable):
 		if (nodeList.getLength() > 0) {
