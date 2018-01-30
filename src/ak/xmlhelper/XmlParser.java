@@ -33,9 +33,7 @@ import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XQueryCompiler;
 import net.sf.saxon.s9api.XQueryEvaluator;
 import net.sf.saxon.s9api.XQueryExecutable;
-import net.sf.saxon.s9api.XdmItem;
 import net.sf.saxon.s9api.XdmNode;
-import net.sf.saxon.s9api.XdmSequenceIterator;
 import net.sf.saxon.s9api.XdmValue;
 
 /**
@@ -46,6 +44,7 @@ import net.sf.saxon.s9api.XdmValue;
 public class XmlParser {
 
 	XPath xPath = XPathFactory.newInstance().newXPath();
+	
 	
 	/**
 	 * Get a document by xQuery in the format <result>[XQUERY-RESULT]</result>
@@ -342,9 +341,9 @@ public class XmlParser {
 		noOfNodes = nodeList.getLength();
 		return noOfNodes;
 	}
-
-
-
+	
+	
+	
 	/**
 	 * Namespace class
 	 * @author Michael Birkner
@@ -353,11 +352,13 @@ public class XmlParser {
 	public class Namespaces implements NamespaceContext {
 		private Map<String, String> valuesNames = new HashMap<String, String>();
 		private Map<String, String> namesValues = new HashMap<String, String>();
-
+		
+		
 		public Namespaces(Document doc) {
 			checkNodeForNS(doc.getFirstChild());
 		}
-
+		
+		
 		private void checkNodeForNS(Node startNode) {
 			NamedNodeMap attrs = startNode.getAttributes();
 			for (int i = 0; i < attrs.getLength(); i++) {
@@ -373,7 +374,8 @@ public class XmlParser {
 				}
 			}
 		}
-
+		
+		
 		private void storeNamespaces(Attr attr) {
 			if (attr.getNamespaceURI() != null && attr.getNamespaceURI().equals(XMLConstants.XMLNS_ATTRIBUTE_NS_URI)) {
 				if (attr.getNodeName().equals(XMLConstants.XMLNS_ATTRIBUTE)) {
@@ -383,12 +385,14 @@ public class XmlParser {
 				}
 			}
 		}
-
+		
+		
 		private void putNamespaces(String nodeName, String nodeValue) {
 			namesValues.put(nodeName, nodeValue);
 			valuesNames.put(nodeValue, nodeName);
 		}
-
+		
+		
 		public String getNamespaceURI(String nsPrefix) {
 			if (nsPrefix == null || nsPrefix.equals(XMLConstants.DEFAULT_NS_PREFIX)) {
 				return namesValues.get("NoNS");
@@ -396,7 +400,8 @@ public class XmlParser {
 				return namesValues.get(nsPrefix);
 			}
 		}
-
+		
+		
 		/**
 		 * Methods not needed
 		 */
