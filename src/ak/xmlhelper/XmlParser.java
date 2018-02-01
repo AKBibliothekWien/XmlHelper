@@ -55,34 +55,37 @@ public class XmlParser {
 	 */
 	public Document getXqueryResult(Document inputDocument, String xQuery) {
 		Document outputDocument = null;
-		try {
-			Processor saxon = new Processor(false);
-			DocumentBuilder db = saxon.newDocumentBuilder();
-			XdmNode xdmNode = db.wrap(inputDocument);
-			XQueryCompiler xQueryCompiler = saxon.newXQueryCompiler();
-			XQueryExecutable xQueryExecutable = xQueryCompiler.compile(xQuery);
-			XQueryEvaluator  xQueryEvaluator = xQueryExecutable.load();
-			xQueryEvaluator.setContextItem(xdmNode);
-			XdmValue xdmValue = xQueryEvaluator.evaluate();
+		
+		if (inputDocument != null) {
+			try {
+				Processor saxon = new Processor(false);
+				DocumentBuilder db = saxon.newDocumentBuilder();
+				XdmNode xdmNode = db.wrap(inputDocument);
+				XQueryCompiler xQueryCompiler = saxon.newXQueryCompiler();
+				XQueryExecutable xQueryExecutable = xQueryCompiler.compile(xQuery);
+				XQueryEvaluator  xQueryEvaluator = xQueryExecutable.load();
+				xQueryEvaluator.setContextItem(xdmNode);
+				XdmValue xdmValue = xQueryEvaluator.evaluate();
 
-			// Create a default DOM document for the return value
-			if (xdmValue != null && xdmValue.size() > 0) {
-				// Create document with a root element called "<result>"
-				DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
-				documentBuilderFactory.setNamespaceAware(true);
-			    javax.xml.parsers.DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
-			    outputDocument = documentBuilder.newDocument();
-			    Element rootElement = outputDocument.createElement("result");
-			    outputDocument.appendChild(rootElement);
-			    
-			    // Insert the XQuery result to the "<result>" root element
-				DOMDestination destination = new DOMDestination(outputDocument.getDocumentElement());
-				saxon.writeXdmValue(xdmValue, destination);
+				// Create a default DOM document for the return value
+				if (xdmValue != null && xdmValue.size() > 0) {
+					// Create document with a root element called "<result>"
+					DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
+					documentBuilderFactory.setNamespaceAware(true);
+				    javax.xml.parsers.DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
+				    outputDocument = documentBuilder.newDocument();
+				    Element rootElement = outputDocument.createElement("result");
+				    outputDocument.appendChild(rootElement);
+				    
+				    // Insert the XQuery result to the "<result>" root element
+					DOMDestination destination = new DOMDestination(outputDocument.getDocumentElement());
+					saxon.writeXdmValue(xdmValue, destination);
+				}
+			} catch (SaxonApiException e) {
+				e.printStackTrace();
+			} catch (ParserConfigurationException e) {
+				e.printStackTrace();
 			}
-		} catch (SaxonApiException e) {
-			e.printStackTrace();
-		} catch (ParserConfigurationException e) {
-			e.printStackTrace();
 		}
 		
 		return outputDocument;
