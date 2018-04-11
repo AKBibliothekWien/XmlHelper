@@ -10,6 +10,9 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.xml.sax.Attributes;
@@ -21,7 +24,6 @@ import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.XMLReaderFactory;
 
 public class XmlMerger {
-
 
 	public boolean mergeElements(String sourceDirectory, String destinationFile, String parentElement, String elementToMerge, int elementLevel) {
 		boolean isMergingSuccessful = false;
@@ -90,7 +92,7 @@ public class XmlMerger {
 
 			// Close given parent element
 			writer.println("</" + parentElement + ">");
-
+			
 			// Close the writer
 			if (writer!=null) { writer.close(); }
 
@@ -124,6 +126,7 @@ public class XmlMerger {
 		int elementLevel = 0;
 		int elementLevelCounter = 0;
 		boolean withinElement = false;
+		Map<String, String> namespaces = new HashMap<>();
 
 
 		/**
@@ -139,6 +142,11 @@ public class XmlMerger {
 			this.writer = writer;
 		}
 
+		
+		@Override
+		public void startPrefixMapping(String prefix, String uri) throws SAXException {
+			namespaces.put(uri, prefix);
+		}
 
 		/**
 		 * Encounters start of element.<br><br>
@@ -163,7 +171,7 @@ public class XmlMerger {
 			}
 
 			if (withinElement) {
-
+				
 				// Open the XML-start-tag and add it to a String variable
 				fullXmlString += "<" + qName;
 
@@ -177,6 +185,13 @@ public class XmlMerger {
 						fullXmlString += " xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"";
 					}
 					fullXmlString += " " + attQName + "=\"" + attValue + "\"";
+				}
+				
+				// Add namespaces to the "element to merge" that were encounterd outside of it so that we don't get errors on missing namespaces.
+				if (!namespaces.isEmpty() && localName.equals(elementToMerge)) {
+					for (Entry<String, String> namespace : namespaces.entrySet()) {
+						fullXmlString += " xmlns:"+namespace.getValue()+"=\"" + namespace.getKey() + "\"";
+					}
 				}
 
 				// Close the XML-start-tag and add it to a String variable
@@ -248,9 +263,6 @@ public class XmlMerger {
 
 		@Override
 		public void endDocument() throws SAXException {}
-
-		@Override
-		public void startPrefixMapping(String prefix, String uri) throws SAXException {}
 
 		@Override
 		public void endPrefixMapping(String prefix) throws SAXException {}
