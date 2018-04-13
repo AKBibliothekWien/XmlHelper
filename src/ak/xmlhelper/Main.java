@@ -67,7 +67,7 @@ public class Main {
 						+ "\n 1. File(s)ToSplit"
 						+ "\n 2. NodeToExtractName (e. g. \"record\")"
 						+ "\n 3. NodeToExtractCount"
-						+ "\n 4. ConditionNodeForFilename (e. g. \"controllfield\")"
+						+ "\n 4. ConditionNodeForFilename (e. g. \"controlfield\")"
 						+ "\n 5. ConditionAttrsForFilename (e. g. \"attr1=value1,attr2=value2,...\" or \"null\" if none)"
 						+ "\n 6. DestinationDir")
 				.hasArgs()
