@@ -46,13 +46,16 @@ public class Main {
 				.required(true)
 				.longOpt("merge")
 				.desc("Merge multiple XML files to one single XML file. Args:"
-						+ "\n 1. PathToFiles"
-						+ "\n 2. ElementToMerge (e. g. \"record\")"
-						+ "\n 3. ElementLevel (for nested elements with same name. 1 for top (= first) level, 2 for second level, ...)"
-						+ "\n 4. NewFile"
-						+ "\n 5. NewXmlParentElement (e. g. \"collection\")")
+						+ "\n 1. Path to XML files to merge"
+						+ "\n 2. Element to merge (e. g. record)"
+						+ "\n 3. Element level (for nested elements with same name. 1 for top (= first) level, 2 for second level, ...)"
+						+ "\n 4. New output XML file with merged elements"
+						+ "\n 5. Parent element in new XML file (e. g. collection)"
+						+ "\n 6. Optional: Parent attributes for parent element. Escape double-quotes and surround with double quotes when there are spaces (e. g. for collection: \"xmlns=\\\"http://www.loc.gov/MARC21/slim\\\" a:b=\\\"c\\\"\")"
+						+ "\n 7. Optional: Element attributes for merged elements. Escape double-quotes and surround with double quotes when there are spaces (e. g. for record: \"xmlns:marc=\\\"http://www.loc.gov/MARC21/slim\\\" a:b=\\\"c\\\"\")")
 				.hasArgs()
-				.numberOfArgs(5)
+				.numberOfArgs(7)
+				.optionalArg(true)
 				.build();
 
 		// s: split
@@ -139,6 +142,7 @@ public class Main {
 
 			if (args.length <= 0 || cmd.hasOption("h")) {
 				HelpFormatter helpFormatter = new HelpFormatter();
+				helpFormatter.setWidth(170);
 				helpFormatter.printHelp("BetullamXmlHelper", "", options, "", true);
 				return;
 			}
@@ -185,11 +189,12 @@ public class Main {
 				int elementLevel = (mergeArgs[2] != null) ? Integer.valueOf(mergeArgs[2]) : 0;
 				String newFile = (mergeArgs[3] != null) ? mergeArgs[3] : null;
 				String newXmlParentElement = (mergeArgs[4] != null) ? mergeArgs[4] : null;
+				String parentAttributes = (mergeArgs.length > 5 && mergeArgs[5] != null) ? mergeArgs[5] : null;
+				String elementAttributes = (mergeArgs.length > 6 && mergeArgs[6] != null) ? mergeArgs[6] : null;
 
 				if (pathToFiles != null && elementToMerge != null && newFile != null && newXmlParentElement != null) {
 					XmlMerger xmlm = new XmlMerger(); // Start merging
-					//boolean isMergingSuccessful = xmlm.mergeElementNodes(pathToFiles, newFile, newXmlParentElement, elementToMerge, elementLevel);
-					boolean isMergingSuccessful = xmlm.mergeElements(pathToFiles, newFile, newXmlParentElement, elementToMerge, elementLevel);
+					boolean isMergingSuccessful = xmlm.mergeElements(pathToFiles, newFile, newXmlParentElement, elementToMerge, elementLevel, parentAttributes, elementAttributes);
 
 					if (isMergingSuccessful) {
 						System.out.println("Merging files was successful.");

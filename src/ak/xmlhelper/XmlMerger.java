@@ -12,7 +12,6 @@ import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.xml.sax.Attributes;
@@ -25,7 +24,7 @@ import org.xml.sax.helpers.XMLReaderFactory;
 
 public class XmlMerger {
 
-	public boolean mergeElements(String sourceDirectory, String destinationFile, String parentElement, String elementToMerge, int elementLevel) {
+	public boolean mergeElements(String sourceDirectory, String destinationFile, String parentElement, String elementToMerge, int elementLevel, String parentAttributes, String elementAttributes) {
 		boolean isMergingSuccessful = false;
 
 		File fSourceDirectory = new File(sourceDirectory);
@@ -67,14 +66,14 @@ public class XmlMerger {
 			PrintWriter writer = new PrintWriter(out);
 
 			// Set ContentHandler:
-			XmlContentHandler xmlContentHandler = new XmlContentHandler(elementToMerge, elementLevel, writer);
+			XmlContentHandler xmlContentHandler = new XmlContentHandler(elementToMerge, elementLevel, elementAttributes, writer);
 			xmlReader.setContentHandler(xmlContentHandler);
 
 			// Add XML intro tag
 			writer.println("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
 
-			// Open with given parent element
-			writer.println("<" + parentElement + ">");
+			// Open with given parent element (including optional user defined attributes)
+			writer.println("<" + parentElement + ((parentAttributes != null && !parentAttributes.isEmpty()) ? " " + parentAttributes : "") + ">");
 
 			// Sort files for proper iteration
 			Arrays.sort(files);
@@ -126,8 +125,7 @@ public class XmlMerger {
 		int elementLevel = 0;
 		int elementLevelCounter = 0;
 		boolean withinElement = false;
-		Map<String, String> namespaces = new HashMap<>();
-
+		String elementAttributes = null;
 
 		/**
 		 * Constructor for the Content Handler that helps merging XML elements.
@@ -136,17 +134,13 @@ public class XmlMerger {
 		 * @param elementLevel		int: The level of the element if there are nested elements of the same name. For the top-level element, use 1.
 		 * @param writer			PrintWriter: A writer that is responsible for writing the appropriate elements to a file.
 		 */
-		private XmlContentHandler(String elementToMerge, int elementLevel, PrintWriter writer) {
+		private XmlContentHandler(String elementToMerge, int elementLevel, String elementAttributes, PrintWriter writer) {
 			this.elementToMerge = elementToMerge;
 			this.elementLevel = elementLevel;
+			this.elementAttributes = elementAttributes;
 			this.writer = writer;
 		}
 
-		
-		@Override
-		public void startPrefixMapping(String prefix, String uri) throws SAXException {
-			namespaces.put(uri, prefix);
-		}
 
 		/**
 		 * Encounters start of element.<br><br>
@@ -187,11 +181,9 @@ public class XmlMerger {
 					fullXmlString += " " + attQName + "=\"" + attValue + "\"";
 				}
 				
-				// Add namespaces to the "element to merge" that were encounterd outside of it so that we don't get errors on missing namespaces.
-				if (!namespaces.isEmpty() && localName.equals(elementToMerge)) {
-					for (Entry<String, String> namespace : namespaces.entrySet()) {
-						fullXmlString += " xmlns:"+namespace.getValue()+"=\"" + namespace.getKey() + "\"";
-					}
+				// Add user defined attributes to the "element to merge" (could also be namespaces).
+				if (localName.equals(elementToMerge) && elementAttributes != null && !elementAttributes.isEmpty()) {
+					fullXmlString += " " + elementAttributes;
 				}
 
 				// Close the XML-start-tag and add it to a String variable
@@ -264,6 +256,9 @@ public class XmlMerger {
 		@Override
 		public void endDocument() throws SAXException {}
 
+		@Override
+		public void startPrefixMapping(String prefix, String uri) throws SAXException {}
+		
 		@Override
 		public void endPrefixMapping(String prefix) throws SAXException {}
 
