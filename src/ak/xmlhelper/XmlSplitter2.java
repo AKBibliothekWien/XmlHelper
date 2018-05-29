@@ -13,6 +13,8 @@ import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
+import org.apache.commons.text.StringEscapeUtils;
+
 public class XmlSplitter2 {
 
 	private String systemTempDirPath = System.getProperty("java.io.tmpdir");
@@ -31,7 +33,7 @@ public class XmlSplitter2 {
 			this.destinationDirectory.mkdir();
 		}
 	}
-	
+
 	public void split(String sourceFile, String nodeNametoExtract, int nodeCount, String condNodeForFilename, Map<String, String> condAttrsForFilename) {
 
 		try {
@@ -51,14 +53,14 @@ public class XmlSplitter2 {
 			StringBuilder elementSb = new StringBuilder("");
 			//Map<String, String> fileNameAttrs;
 			FileWriter fileWriter = null;
-			
+
 
 			try {
 				xsr = xif.createXMLStreamReader(bis);
 
 				while(xsr.hasNext()){
 					int eventType = xsr.next();
-					
+
 					String localName = null;
 					String elementName = null;
 					//String elementText = null;
@@ -66,7 +68,7 @@ public class XmlSplitter2 {
 					if (eventType == XMLStreamReader.START_ELEMENT) {
 						localName = xsr.getLocalName();
 						//String elementText = xsr.getElementText();
-						
+
 						if (localName.equals(nodeNametoExtract)) {
 							counter = counter + 1;
 						}
@@ -94,7 +96,7 @@ public class XmlSplitter2 {
 									if (attributeName == null || attributeName.isEmpty()) {
 										attributeName = xsr.getAttributeName(i).toString();
 									}
-									elementSb.append(" " + attributeName + "=\"" + this.escapeXml(attributeValue) + "\"");
+									elementSb.append(" " + attributeName + "=\"" + StringEscapeUtils.escapeXml10(attributeValue) + "\"");
 								}
 
 								Map<String, String> nodeAttributes = new HashMap<String, String>();
@@ -112,7 +114,7 @@ public class XmlSplitter2 {
 										isFilenameNode = nodeAttributes.entrySet().containsAll(condAttrsForFilename.entrySet());
 									}
 								}
-								
+
 							}  else {
 								// There are no attrs to check, but the node name for getting the data the file name is right
 								if (localName.equals(condNodeForFilename)) {
@@ -120,42 +122,40 @@ public class XmlSplitter2 {
 								}
 							}
 							elementSb.append(">");
-							
-							
-							
 						}
 					}
-					
+
+
+					if (eventType == XMLStreamReader.CHARACTERS) {
+						// Add element text
+						String elementText = xsr.getText();
+						if (elementText != null && !elementText.trim().isEmpty()) {
+							String trimmedElementText = elementText.trim();
+
+							if (isFilenameNode) {
+								fileName = trimmedElementText.replaceAll("\\W", "");
+								isFilenameNode = false;
+							}
+							elementSb.append(StringEscapeUtils.escapeXml10(StringEscapeUtils.unescapeXml(trimmedElementText)));
+						}
+					}
+
+
 					if (eventType == XMLStreamReader.END_ELEMENT) {
-						
-						
-//						// Get the element Name
-//						elementName = localName;
-//						if (elementName.isEmpty()) {
-//							elementName = xsr.getName().toString();
-//						}
-						
+						localName = xsr.getLocalName();
 						
 						if ((localName.equals(nodeNametoExtract) || isRequestedElement == true) && (counter >= nodeCount)) {
-							// Add element text
-							String elementText = xsr.getElementText();
-							if (elementText != null && !elementText.trim().isEmpty()) {
-								String trimmedElementText = elementText.trim();
-								
-								if (isFilenameNode) {
-									fileName = trimmedElementText.replaceAll("\\W", "");
-									isFilenameNode = false;
-								}
-								
-								elementSb.append(this.escapeXml(unescapeXml(trimmedElementText)));
-								
+							
+							// Get the element Name
+							elementName = localName;
+							if (elementName.isEmpty()) {
+								elementName = xsr.getName().toString();
 							}
 
 							// Add closing tag
 							elementSb.append("</" + elementName + ">");
 						}
-						
-						
+
 						if (localName.equals(nodeNametoExtract)) {
 							counter = counter - 1;
 
@@ -185,27 +185,16 @@ public class XmlSplitter2 {
 								fileName = "";  // Reset filename String
 							}
 						}
-						
 					}
 				}
 			} catch (XMLStreamException e) {
 				e.printStackTrace();
 			}
-			
+
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
 	}
 	
-	private String escapeXml(String string) {
-		// Escape characters that are not allowed in XML:
-		return string.replaceAll("&", "&amp;").replaceAll("\"", "&quot;").replaceAll("\'", "&apos;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
-	}
 
-
-	private String unescapeXml(String string) {
-		// Unescape escaped characters:
-		return string.replaceAll("&amp;", "&").replaceAll("&quot;", "\"").replaceAll("&apos;", "\'").replaceAll("&lt;", "<").replaceAll("&gt;", ">");
-	}
-	
 }
