@@ -1,6 +1,8 @@
 package ak.xmlhelper;
 
 import java.io.File;
+import java.io.FilenameFilter;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -72,7 +74,23 @@ public class Main {
 						+ "\n 6. DestinationDir")
 				.hasArgs()
 				.numberOfArgs(6)
-				.build();		
+				.build();
+
+		// s: split
+		Option oSplit2= Option
+				.builder()
+				.required(true)
+				.longOpt("split2")
+				.desc("TEST version of splitting one XML file into multiple single XML files. args:"
+						+ "\n 1. Path to a directory of file(s) to split"
+						+ "\n 2. NodeToExtractName (e. g. \"record\")"
+						+ "\n 3. NodeToExtractCount (start with 0 for top level)"
+						+ "\n 4. ConditionNodeForFilename (e. g. \"controlfield\")"
+						+ "\n 5. ConditionAttrsForFilename (e. g. \"attr1=value1,attr2=value2,...\" or \"null\" if none)"
+						+ "\n 6. DestinationDir")
+				.hasArgs()
+				.numberOfArgs(6)
+				.build();	
 
 		// c: count
 		Option oCount= Option
@@ -101,7 +119,7 @@ public class Main {
 						+ "\n 5. Name of XML tag the other XML element should be counted in. E. c. if you want to count the \"name\" tags in a structure like <record> <name>...</name> <name>...</name> </record>, specify \"record\"."
 						+ "\n 6. A semicolon separated list of comma separated lists that consists of a tag name, attribute name and attribute value, for which the content should be printed, e. g. \"controlfied,tag,001;controlfied,tag,002\"."
 						+ "\n 7. Path to a text file where the output should be written, e. g. \"/home/username/myresults.txt\".")
-						
+
 				.hasArgs()
 				.numberOfArgs(7)
 				.build();
@@ -129,6 +147,7 @@ public class Main {
 		optionGroup.addOption(oValidate);
 		optionGroup.addOption(oMerge);
 		optionGroup.addOption(oSplit);
+		optionGroup.addOption(oSplit2);
 		optionGroup.addOption(oCount);
 		optionGroup.addOption(oCountWithin);
 		optionGroup.addOption(oClean);
@@ -282,6 +301,76 @@ public class Main {
 				break;
 			}
 
+			case "split2": {
+
+				System.out.println("\nTEST splitter - Start splitting XML file.");
+				String[] splitArgs = cmd.getOptionValues("split2");
+				//List<File> filesToSplit = new ArrayList<File>();
+
+				String strFileToSplit = (splitArgs[0] != null) ? splitArgs[0] : null;
+				String nodeToExtractName = (splitArgs[1] != null) ? splitArgs[1] : null;
+				int nodeToExtractCount = (splitArgs[2] != null) ? Integer.valueOf(splitArgs[2]) : 0;
+				String conditionNodeForFilename = (splitArgs[3] != null) ? splitArgs[3] : null;
+				Map<String, String> conditionAttrsForFilename = new HashMap<String, String>();
+				String destinationDir = (splitArgs[5] != null) ? splitArgs[5] : null;
+				File[] filesToSplit = null;
+				
+				if (strFileToSplit != null && nodeToExtractName != null && conditionNodeForFilename != null && destinationDir != null) {
+
+					XmlSplitter2 xmls2 = new XmlSplitter2(destinationDir);
+
+					// Check if file or path:
+					File fileToSplit = new File(strFileToSplit);
+					boolean isDir = false;
+					if (fileToSplit.isDirectory()) {
+						isDir = true;
+					}
+
+					if (isDir) {
+						if (fileToSplit != null && fileToSplit.canRead()) {
+
+							// Get a sorted list (by filename) of all XML files:
+							filesToSplit = fileToSplit.listFiles(new FilenameFilter() {
+								@Override
+								public boolean accept(File dir, String name) {
+									if(name.toLowerCase().endsWith(".xml")) {
+										return true;
+									}
+									return false;
+								}
+							});
+							Arrays.sort(filesToSplit);
+						}
+					}
+
+					String strConditionAttrsForFilename = (splitArgs[4] != null) ? splitArgs[4] : null;
+					if (strConditionAttrsForFilename != null && !strConditionAttrsForFilename.equals("null") && !strConditionAttrsForFilename.isEmpty()) {
+						String[] arrConditionAttrsForFilename = strConditionAttrsForFilename.split("\\s*,\\s*");
+						for (String conditionAttrForFilename : arrConditionAttrsForFilename) {
+							String[] attrValuePair = conditionAttrForFilename.split("\\s*=\\s*");
+							if (attrValuePair.length == 2) {
+								String attr = attrValuePair[0];
+								String value = attrValuePair[1];
+								conditionAttrsForFilename.put(attr, value);
+							}
+						}
+					}
+
+					if (isDir && filesToSplit.length > 0) {
+						// Split XMLs. Files will be overwritten by newer files with same name:
+						for (File fileForSplitting : filesToSplit) {
+							System.out.print("Splitting file " + fileForSplitting.getAbsolutePath() + "                                                        \r");
+							xmls2.split(fileForSplitting.getAbsolutePath(), nodeToExtractName, nodeToExtractCount, conditionNodeForFilename, conditionAttrsForFilename);
+						}
+					} else if (!isDir){
+						System.out.print("Splitting file " + fileToSplit.getAbsolutePath() + "                                                        \r");
+						xmls2.split(fileToSplit.getAbsolutePath(), nodeToExtractName, nodeToExtractCount, conditionNodeForFilename, conditionAttrsForFilename);
+					}
+				}
+
+				break;
+			}
+
 			case "c": {
 
 				System.out.println("\nStart counting XML elements.");
@@ -323,17 +412,17 @@ public class Main {
 					XmlField xmlField = new XmlField(tagName, attrName, attrValue);
 					xmlFields.add(xmlField);
 				}				
-				
+
 				if (xmlFile != null && tagNameCount != null && tagNameCountWithin != null) {
 					XmlCounter xmlc = new XmlCounter();
 					int noOfElements = xmlc.countWithin(xmlFile, tagNameCount, attrNameCount, attrValueCount, tagNameCountWithin, xmlFields, outFile);
 					System.out.print("                                                                                              \r");
 					System.out.print("\nTotal elements: " + noOfElements + "\n");
 				}
-				
+
 				break;
 			}
-			
+
 			case "l": {
 
 				System.out.println("\nStart cleaning XML file(s).");

@@ -45,11 +45,11 @@ public class XmlSplitter2 {
 			int counter = -1;
 			boolean isRequestedElement = false;
 			boolean isFilenameNode = false;
-			String fileNameNode = null;
+			//String fileNameNode = null;
 			String fileName = null;
-			StringBuilder textContentSb = new StringBuilder("");
+			//StringBuilder textContentSb = new StringBuilder("");
 			StringBuilder elementSb = new StringBuilder("");
-			Map<String, String> fileNameAttrs;
+			//Map<String, String> fileNameAttrs;
 			FileWriter fileWriter = null;
 			
 
