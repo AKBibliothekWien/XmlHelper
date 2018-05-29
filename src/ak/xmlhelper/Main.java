@@ -2,7 +2,6 @@ package ak.xmlhelper;
 
 import java.io.File;
 import java.io.FilenameFilter;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -108,7 +107,22 @@ public class Main {
 				.hasArgs()
 				.numberOfArgs(6)
 				.build();
-
+		
+		// split4
+		Option oSplit4= Option
+				.builder()
+				.required(true)
+				.longOpt("split4")
+				.desc("TEST version 4 of splitting one XML file into multiple single XML files. args:"
+						+ "\n 1. Path to a directory of file(s) to split"
+						+ "\n 2. NodeToExtractName (e. g. \"record\")"
+						+ "\n 3. NodeToExtractCount (start with 0 for top level)"
+						+ "\n 4. ConditionNodeForFilename (e. g. \"controlfield\")"
+						+ "\n 5. ConditionAttrsForFilename (e. g. \"attr1=value1,attr2=value2,...\" or \"null\" if none)"
+						+ "\n 6. DestinationDir")
+				.hasArgs()
+				.numberOfArgs(6)
+				.build();
 		// c: count
 		Option oCount= Option
 				.builder("c")
@@ -166,6 +180,7 @@ public class Main {
 		optionGroup.addOption(oSplit);
 		optionGroup.addOption(oSplit2);
 		optionGroup.addOption(oSplit3);
+		optionGroup.addOption(oSplit4);
 		optionGroup.addOption(oCount);
 		optionGroup.addOption(oCountWithin);
 		optionGroup.addOption(oClean);
@@ -471,7 +486,84 @@ public class Main {
 				}
 
 				long endTime = System.currentTimeMillis();
-				
+
+				System.out.println("Time elapsed:\t" + DurationFormatUtils.formatDurationHMS(endTime - startTime));
+
+				break;
+			}
+			
+			case "split4": {
+
+				//long startTime = System.nanoTime();
+				long startTime = System.currentTimeMillis();
+
+				System.out.println("\nTEST splitter4 - Start splitting XML file.");
+				String[] splitArgs = cmd.getOptionValues("split4");
+				//List<File> filesToSplit = new ArrayList<File>();
+
+				String strFileToSplit = (splitArgs[0] != null) ? splitArgs[0] : null;
+				String nodeToExtractName = (splitArgs[1] != null) ? splitArgs[1] : null;
+				int nodeToExtractCount = (splitArgs[2] != null) ? Integer.valueOf(splitArgs[2]) : 0;
+				String conditionNodeForFilename = (splitArgs[3] != null) ? splitArgs[3] : null;
+				Map<String, String> conditionAttrsForFilename = new HashMap<String, String>();
+				String destinationDir = (splitArgs[5] != null) ? splitArgs[5] : null;
+				File[] filesToSplit = null;
+
+				if (strFileToSplit != null && nodeToExtractName != null && conditionNodeForFilename != null && destinationDir != null) {
+
+					XmlSplitter4 xmls4 = new XmlSplitter4(destinationDir);
+
+					// Check if file or path:
+					File fileToSplit = new File(strFileToSplit);
+					boolean isDir = false;
+					if (fileToSplit.isDirectory()) {
+						isDir = true;
+					}
+
+					if (isDir) {
+						if (fileToSplit != null && fileToSplit.canRead()) {
+
+							// Get a sorted list (by filename) of all XML files:
+							filesToSplit = fileToSplit.listFiles(new FilenameFilter() {
+								@Override
+								public boolean accept(File dir, String name) {
+									if(name.toLowerCase().endsWith(".xml")) {
+										return true;
+									}
+									return false;
+								}
+							});
+							Arrays.sort(filesToSplit);
+						}
+					}
+
+					String strConditionAttrsForFilename = (splitArgs[4] != null) ? splitArgs[4] : null;
+					if (strConditionAttrsForFilename != null && !strConditionAttrsForFilename.equals("null") && !strConditionAttrsForFilename.isEmpty()) {
+						String[] arrConditionAttrsForFilename = strConditionAttrsForFilename.split("\\s*,\\s*");
+						for (String conditionAttrForFilename : arrConditionAttrsForFilename) {
+							String[] attrValuePair = conditionAttrForFilename.split("\\s*=\\s*");
+							if (attrValuePair.length == 2) {
+								String attr = attrValuePair[0];
+								String value = attrValuePair[1];
+								conditionAttrsForFilename.put(attr, value);
+							}
+						}
+					}
+
+					if (isDir && filesToSplit.length > 0) {
+						// Split XMLs. Files will be overwritten by newer files with same name:
+						for (File fileForSplitting : filesToSplit) {
+							System.out.print("Splitting file " + fileForSplitting.getAbsolutePath() + "                                                        \n");
+							xmls4.split(fileForSplitting.getAbsolutePath(), nodeToExtractName, nodeToExtractCount, conditionNodeForFilename, conditionAttrsForFilename);
+						}
+					} else if (!isDir){
+						System.out.print("Splitting file " + fileToSplit.getAbsolutePath() + "                                                        \n");
+						xmls4.split(fileToSplit.getAbsolutePath(), nodeToExtractName, nodeToExtractCount, conditionNodeForFilename, conditionAttrsForFilename);
+					}
+				}
+
+				long endTime = System.currentTimeMillis();
+
 				System.out.println("Time elapsed:\t" + DurationFormatUtils.formatDurationHMS(endTime - startTime));
 
 				break;
@@ -547,15 +639,6 @@ public class Main {
 		} catch (ParseException e) {
 			e.printStackTrace();
 		}
-	}
-
-	private static String getHumanReadableTime(Long nanoseconds){
-		long tSeconds	= nanoseconds / (1000*1000*1000);
-		long seconds	= tSeconds % 60;
-		long minutes	= (tSeconds / 60) % 60;
-		long hours		= (tSeconds / (60 * 60)) % 24;
-		long days		= (tSeconds / (24 * 60 * 60)) % 24;
-		return String.format("%dd %dh %dm %ds", days, hours, minutes, seconds);
 	}
 
 }

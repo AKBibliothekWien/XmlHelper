@@ -1,29 +1,23 @@
 package ak.xmlhelper;
 
 import java.io.BufferedInputStream;
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileDescriptor;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
-import javax.xml.stream.XMLEventReader;
-import javax.xml.stream.XMLEventWriter;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLOutputFactory;
+import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.events.Attribute;
-import javax.xml.stream.events.EndElement;
-import javax.xml.stream.events.StartElement;
-import javax.xml.stream.events.XMLEvent;
+import javax.xml.stream.XMLStreamReader;
+import javax.xml.stream.XMLStreamWriter;
 
-public class XmlSplitter3 {
+public class XmlSplitter4 {
 
 	private String systemTempDirPath = System.getProperty("java.io.tmpdir");
 	private String tempDirPath = systemTempDirPath + File.separator + "xmlSplitted";
@@ -31,7 +25,7 @@ public class XmlSplitter3 {
 	private String destinationDirectoryStr = null;
 
 
-	public XmlSplitter3(String destinationDirectoryPath) {
+	public XmlSplitter4(String destinationDirectoryPath) {
 		// Create destination directory. If destinationDirectoryPath is null, we use temp directory of OS:
 		if (destinationDirectoryPath == null || destinationDirectoryPath.isEmpty()) {
 			this.destinationDirectory = new File(tempDirPath);
@@ -45,27 +39,25 @@ public class XmlSplitter3 {
 	}
 
 	public void split(String sourceFile, String nodeNametoExtract, int nodeCount, String condNodeForFilename, Map<String, String> condAttrsForFilename) {
-		// TODO: Try cursor style API
 		try {
 			FileInputStream fis = new FileInputStream(sourceFile);
 			BufferedInputStream bis = new BufferedInputStream(fis);
 			XMLInputFactory xif = XMLInputFactory.newInstance();
 			XMLOutputFactory xof = XMLOutputFactory.newInstance();
-			XMLEventWriter xewString = null;
-			XMLEventWriter xewFile = null;
-			XMLEventReader xer = xif.createXMLEventReader(bis);
+			XMLStreamWriter xswString = null;
+			XMLStreamWriter xswFile = null;		
+			XMLStreamReader xsr = xif.createXMLStreamReader(bis);
 			int count = 0;
 			FileWriter fw = null;
 			StringWriter sw = null;
 			StringBuilder fileName = null;
-			boolean isFilenameNode = false;
 
-			while(xer.hasNext()) {
-				XMLEvent e = xer.nextEvent();
+			while(xsr.hasNext()) {
+				int e = xsr.next();
 
-				if (e.isStartElement()) {
-					StartElement startElement = e.asStartElement();
-					String localName = startElement.getName().getLocalPart();
+				switch (e) {
+				case XMLStreamConstants.START_ELEMENT:
+					String localName = xsr.getLocalName();
 
 					if (localName.equals(nodeNametoExtract)) {
 						count++;
@@ -73,77 +65,80 @@ public class XmlSplitter3 {
 						if (count == nodeCount) {
 							fileName = new StringBuilder();
 							sw = new StringWriter();
-							xewString = xof.createXMLEventWriter(sw);
+							xswString = xof.createXMLStreamWriter(sw);
 						}
 					}
 
 					if (count >= nodeCount) {
 
-						if (xewString != null) {
-							xewString.add(e);
+						if (xswString != null) {
+							xswString.writeStartElement(localName);
 						}
-																		
-						// Get file name
-						if (localName.equals(condNodeForFilename)) {
 
-							Map<String, String> nodeAttributes = new HashMap<String, String>();
-
-							if (condAttrsForFilename != null && !condAttrsForFilename.isEmpty()) {
-
-								Iterator<?> attrs = startElement.getAttributes();
-								while (attrs.hasNext()) {
-									Attribute attr = (Attribute)attrs.next();
-									nodeAttributes.put(attr.getName().getLocalPart(), attr.getValue());
-									if (nodeAttributes.entrySet().containsAll(condAttrsForFilename.entrySet())) {
-										isFilenameNode = true;
+						int noAttr = xsr.getAttributeCount();
+						if (noAttr > 0) {
+							for (int i = 0; i < noAttr; i++) {
+								String attrName = xsr.getAttributeLocalName(i);
+								String attrValue = xsr.getAttributeValue(i);
+								xswString.writeAttribute(attrName, attrValue);
+								
+								// Get file name
+								if (localName.equals(condNodeForFilename)) {
+									String elementText = null;
+									if (condAttrsForFilename != null && !condAttrsForFilename.isEmpty()) {
+										Map<String, String> nodeAttributes = new HashMap<String, String>();
+										
+										nodeAttributes.put(attrName, attrValue);
+										if (nodeAttributes.entrySet().containsAll(condAttrsForFilename.entrySet())) {
+											elementText = xsr.getElementText();
+											fileName.append(this.destinationDirectoryStr);	
+											fileName.append(elementText);
+											fileName.append(".xml");
+										}
+									} else {
+										elementText = xsr.getElementText();
+										fileName.append(this.destinationDirectoryStr);	
+										fileName.append(elementText);
+										fileName.append(".xml");
 									}
 								}
-							} else {
-								isFilenameNode = true;
 							}
 						}
 					}
-
-				} else if (e.isCharacters()) {
+					break;
+					
+				case XMLStreamConstants.CHARACTERS:
+					if (count >= nodeCount) {
+						xswString.writeCharacters(xsr.getText());
+					}
+					break;
+					
+				case XMLStreamConstants.END_ELEMENT:
+					String localNameEnd = xsr.getLocalName();
 
 					if (count >= nodeCount) {
-						xewString.add(e);
-
-						if (isFilenameNode) {
-							fileName.append(this.destinationDirectoryStr);
-							fileName.append(e.asCharacters().getData());
-							fileName.append(".xml");
-							isFilenameNode = false;
-						}
+						xswString.writeEndElement();
 					}
 
-				} else if (e.isEndElement()) {
-					String localName = ((EndElement)e).getName().getLocalPart();
-
-					if (count >= nodeCount) {
-						xewString.add(e);
-					}
-
-					if (localName.equals(nodeNametoExtract)) {
+					if (localNameEnd.equals(nodeNametoExtract)) {
 						count --;
 
 						if (count == 0) {
+							xswString.writeEndElement(); // Closing record element
+							
 							fw = new FileWriter(fileName.toString());
 							fw.write(sw.toString());
-							xewFile = xof.createXMLEventWriter(fw);
-							xewString.flush();
-							xewFile.flush();
+							xswFile = xof.createXMLStreamWriter(fw);
+							xswString.flush();
+							xswFile.flush();
 							fileName = null;
-							//break; // Stops after the first <record> element
 						} 
 					}
-				} else if (xewString != null && count >= nodeCount) {
-					xewString.add(e);
-				}
-			}
 
-			if (xewString != null) {
-				xewString.close();
+					break;
+				default:
+					break;
+				}
 			}
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
