@@ -1,39 +1,25 @@
 package ak.xmlhelper;
 
 import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.FilenameFilter;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLOutputFactory;
+import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLStreamWriter;
 
-//import org.apache.commons.lang3.StringEscapeUtils;
-import org.apache.commons.text.StringEscapeUtils;
-import org.xml.sax.Attributes;
-import org.xml.sax.ContentHandler;
-import org.xml.sax.InputSource;
-import org.xml.sax.Locator;
-import org.xml.sax.SAXException;
-import org.xml.sax.XMLReader;
-import org.xml.sax.helpers.XMLReaderFactory;
-
 public class XmlMerger2 {
 
-	public boolean mergeElements(String sourceDirectory, String destinationFile, String parentElement, String elementToMerge, int elementLevel, String parentAttributes, String elementAttributes) {
+	public boolean mergeElements(String sourceDirectory, String destinationFile, String parentNode, String mergeNode, int mergeNodeLevel, String parentNodeAttr, String mergeNodeAttr) {
 		boolean isMergingSuccessful = false;
 
 		File fSourceDirectory = new File(sourceDirectory);
@@ -52,78 +38,226 @@ public class XmlMerger2 {
 		String fileName = null;
 
 		try {
-			/*
-			FileInputStream fis = new FileInputStream(fSourceDirectory);
-			BufferedInputStream bis = new BufferedInputStream(fis);
-			XMLInputFactory xif = XMLInputFactory.newInstance();
-			XMLOutputFactory xof = XMLOutputFactory.newInstance();
-			XMLStreamWriter xswString = null;
-			XMLStreamWriter xswFile = null;		
-			XMLStreamReader xsr = xif.createXMLStreamReader(bis);
-			int count = 0;
-			FileWriter fw = null;
-			StringWriter sw = null;
-			*/
-			
+
 			// Get XML files that should be merged
 			File[] files = fSourceDirectory.listFiles(new FilenameFilter() {
 				public boolean accept(File dir, String name) {
 					return name.toLowerCase().endsWith(".xml");
 				}
 			});
-			
+
 			// If we have no files to merge, stop the process
 			if (files.length <= 0) {
 				return true;
 			}
-			
-			
-			
-			/*
-			// Create SAX parser:
-			XMLReader xmlReader = XMLReaderFactory.createXMLReader();
 
-			// Set SAX parser namespace aware (namespaceawareness)
-			xmlReader.setFeature("http://xml.org/sax/features/namespace-prefixes", true);
-
-			// Create OutputStream and PrintWriter
-			OutputStream out = new BufferedOutputStream(new FileOutputStream(fDestinationFile.getAbsolutePath()));
-			PrintWriter writer = new PrintWriter(out);
-
-			// Set ContentHandler:
-			XmlContentHandler xmlContentHandler = new XmlContentHandler(elementToMerge, elementLevel, elementAttributes, writer);
-			xmlReader.setContentHandler(xmlContentHandler);
-
-			// Add XML intro tag
-			writer.println("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
-
-			// Open with given parent element (including optional user defined attributes)
-			writer.println("<" + parentElement + ((parentAttributes != null && !parentAttributes.isEmpty()) ? " " + parentAttributes : "") + ">");
-
-			// Sort files for proper iteration
-			Arrays.sort(files);
-
-			// Iterate over files that should be merged
-			for (File xmlFile : files) {
-				// Specify XML-file to parse
-				fileName = xmlFile.getAbsolutePath();
-				FileReader reader = new FileReader(xmlFile);
-				InputSource inputSource = new InputSource(reader);
-
-				// Start parsing
-				xmlReader.parse(inputSource);
+			// If we should write custom attributes to the merge node, get them now
+			List<CustomAttribute> customMergeNodeAttrs = null;
+			if (mergeNodeAttr != null && !mergeNodeAttr.isEmpty()) {
+				customMergeNodeAttrs = new ArrayList<CustomAttribute>();
+				String[] mergeNodeAttrSplitted = mergeNodeAttr.split("\\s*;\\s*");
+				for (String customMergeAttr : mergeNodeAttrSplitted) {
+					String[] customMergeAttrSplitted = customMergeAttr.split("\\s*,\\s*");
+					int customMergeAttrSplittedLength = customMergeAttrSplitted.length;
+					if (customMergeAttrSplittedLength >= 2 && customMergeAttrSplittedLength <= 4) {
+						CustomAttribute customMergeAttribute = new CustomAttribute();
+						customMergeAttribute.setNoOfParts(customMergeAttrSplittedLength);
+						customMergeAttribute.setLocalName(customMergeAttrSplitted[0]);
+						customMergeAttribute.setValue(customMergeAttrSplitted[1]);
+						if (customMergeAttrSplittedLength >= 3) {
+							customMergeAttribute.setNamespaceUri(customMergeAttrSplitted[2]);
+						}
+						if (customMergeAttrSplittedLength == 4) {
+							customMergeAttribute.setPrefix(customMergeAttrSplitted[3]);
+						}
+						customMergeNodeAttrs.add(customMergeAttribute);
+					}
+				}
 			}
 
-			// Close given parent element
-			writer.println("</" + parentElement + ">");
-			
-			// Close the writer
-			if (writer!=null) { writer.close(); }
+			// If we should write custom attributes to the parent node, get them now
+			List<CustomAttribute> customParentNodeAttrs = null;
+			if (parentNodeAttr != null && !parentNodeAttr.isEmpty()) {
+				customParentNodeAttrs = new ArrayList<CustomAttribute>();
+				String[] parentNodeAttrSplitted = parentNodeAttr.split("\\s*;\\s*");
+				for (String parentAttr : parentNodeAttrSplitted) {
+					String[] customParentAttrSplitted = parentAttr.split("\\s*,\\s*");
+					int customParentAttrSplittedLength = customParentAttrSplitted.length;
+					if (customParentAttrSplittedLength >= 2 && customParentAttrSplittedLength <= 4) {
+						CustomAttribute customParentAttribute = new CustomAttribute();
+						customParentAttribute.setNoOfParts(customParentAttrSplittedLength);
+						customParentAttribute.setLocalName(customParentAttrSplitted[0]);
+						customParentAttribute.setValue(customParentAttrSplitted[1]);
+						if (customParentAttrSplittedLength >= 3) {
+							customParentAttribute.setNamespaceUri(customParentAttrSplitted[2]);
+						}
+						if (customParentAttrSplittedLength == 4) {
+							customParentAttribute.setPrefix(customParentAttrSplitted[3]);
+						}
+						customParentNodeAttrs.add(customParentAttribute);
+					}
+				}
+			}
+
+			XMLInputFactory xif = XMLInputFactory.newInstance();
+			XMLOutputFactory xof = XMLOutputFactory.newInstance();
+			xof.setProperty("javax.xml.stream.isRepairingNamespaces", true);
+			FileWriter fw = new FileWriter(fDestinationFile.getAbsolutePath());
+			XMLStreamWriter xsw = xof.createXMLStreamWriter(fw);
+			XMLStreamReader xsr = null;
+			FileInputStream fis = null;
+			BufferedInputStream bis = null;
+			int counter = 0;
+
+			// Write XML declaration
+			xsw.writeStartDocument("UTF-8", "1.0");
+
+			// Write overall enclosing XML element.
+			xsw.writeStartElement(parentNode);
+
+			// If custom attribute/s is/are given for the parent node in the config file, write it/them now
+			// TODO: It's possible that a separation of writing the namespace and writing attributes is necessary!
+			if (customParentNodeAttrs != null && customParentNodeAttrs.isEmpty()) {
+				for (int i = 0; i < customParentNodeAttrs.size(); i++) {
+					CustomAttribute customParentAttr = customParentNodeAttrs.get(i);
+					String attrLocalName = customParentAttr.getLocalName();
+					String attrValue = customParentAttr.getValue();
+					int attrNoOfParts = customParentAttr.getNoOfParts();
+
+					if (attrNoOfParts == 2) {
+						xsw.writeAttribute(attrLocalName, attrValue);
+					} else if (attrNoOfParts > 2) {
+						String attrNamespaceUri = customParentAttr.getNamespaceUri();
+						if (attrNoOfParts == 3) {
+							xsw.writeAttribute(attrNamespaceUri, attrLocalName, attrValue);
+						}
+						if (attrNoOfParts == 4) {
+							String attrPrefix = customParentAttr.getPrefix();
+							xsw.writeAttribute(attrPrefix, attrNamespaceUri, attrLocalName, attrValue);
+						}
+					} 
+				}
+			}			
+
+			// Iterate over all XML files
+			for (File xmlFile : files) {
+
+				// Set streams and readers
+				fis = new FileInputStream(xmlFile);
+				bis = new BufferedInputStream(fis);
+				xsr = xif.createXMLStreamReader(bis);
+
+				// Iterate over XML reader events
+				while(xsr.hasNext()) {
+					int e = xsr.next();
+
+					switch (e) {
+					case XMLStreamConstants.START_ELEMENT:
+
+						// Get the name of the current opening XML element
+						String localName = xsr.getLocalName();
+
+						// Check if the current opening XML element is the one that should be merged
+						if (localName.equals(mergeNode)) {
+							counter++;
+						}
+
+						if (counter >= mergeNodeLevel) {
+
+							// Write the current opening XML element
+							xsw.writeStartElement(localName);
+
+							// Check if the current opening XML element has attributes
+							int noAttr = xsr.getAttributeCount();
+							if (noAttr > 0) {
+								// If we encounter attributes, write them to the opening XML element
+								for (int i = 0; i < noAttr; i++) {
+									xsw.writeAttribute(xsr.getAttributeLocalName(i), xsr.getAttributeValue(i));
+								}
+							}
+
+							if (localName.equals(mergeNode)) {
+								// If custom attribute/s is/are given for the "node-to-merge" in the config file, write it/them now
+								// TODO: It's possible that a separation of writing the namespace and writing attributes is necessary!
+								if (customMergeNodeAttrs != null && !customMergeNodeAttrs.isEmpty()) {
+									for (int i = 0; i < customMergeNodeAttrs.size(); i++) {
+										CustomAttribute customAttr = customMergeNodeAttrs.get(i);
+										String attrLocalName = customAttr.getLocalName();
+										String attrValue = customAttr.getValue();
+										int attrNoOfParts = customAttr.getNoOfParts();
+
+										if (attrNoOfParts == 2) {
+											xsw.writeAttribute(attrLocalName, attrValue);
+										} else if (attrNoOfParts > 2) {
+											String attrNamespaceUri = customAttr.getNamespaceUri();
+											if (attrNoOfParts == 3) {
+												xsw.writeAttribute(attrNamespaceUri, attrLocalName, attrValue);
+											}
+											if (attrNoOfParts == 4) {
+												String attrPrefix = customAttr.getPrefix();
+												xsw.writeAttribute(attrPrefix, attrNamespaceUri, attrLocalName, attrValue);
+											}
+										} 
+									}
+								}
+							}
+
+						}
+						break;
+
+					case XMLStreamConstants.CHARACTERS:
+						if (counter >= mergeNodeLevel) {
+							// Write the text content
+							xsw.writeCharacters(xsr.getText());
+						}
+						break;
+
+					case XMLStreamConstants.END_ELEMENT:
+						String localNameEnd = xsr.getLocalName();
+
+						if (counter >= mergeNodeLevel) {
+							// Write the end element
+							xsw.writeEndElement();
+						}
+
+						if (localNameEnd.equals(mergeNode)) {
+							counter --;
+
+							if (counter == 0) {
+								// Output to file
+								xsw.flush();
+								fw.flush();
+							} 
+						}
+						break;
+					default:
+						break;
+					}
+				}
+			}
+
+			xsw.writeEndElement();
+			xsw.writeEndDocument();
+
+			if (xsw != null) {
+				xsw.close();
+			}
+			if (fw != null) {
+				fw.close();
+			}
+			if (xsw != null) {
+				xsr.close();
+			}
+			if (bis != null) {
+				bis.close();
+			}
+			if (fis != null) {
+				fis.close();
+			}
 
 			isMergingSuccessful = true;
-			*/
 
-		} catch (FileNotFoundException e) {
+		}catch (FileNotFoundException e) {
 			e.printStackTrace();
 			System.err.println("File not found: " + fileName);
 		} catch (IOException e) {
@@ -137,166 +271,53 @@ public class XmlMerger2 {
 	}
 
 
+	private class CustomAttribute {
+		private String prefix = null;
+		private String namespaceUri = null;
+		private String localName = null;
+		private String value = null;
+		private int noOfParts = 0;
 
-	/**
-	 * Content Handler for merging XML elements.
-	 */
-	private class XmlContentHandler implements ContentHandler {
+		public CustomAttribute() {}
 
-		String elementToMerge;
-		PrintWriter writer;
-		String elementContent;
-		//String fullXmlString = "";
-		StringBuilder fullXmlString = null;
-		int elementLevel = 0;
-		int elementLevelCounter = 0;
-		boolean withinElement = false;
-		String elementAttributes = null;
-
-		/**
-		 * Constructor for the Content Handler that helps merging XML elements.
-		 * 
-		 * @param elementToMerge	String: The XML element that should be merged, e. g. "record"
-		 * @param elementLevel		int: The level of the element if there are nested elements of the same name. For the top-level element, use 1.
-		 * @param writer			PrintWriter: A writer that is responsible for writing the appropriate elements to a file.
-		 */
-		private XmlContentHandler(String elementToMerge, int elementLevel, String elementAttributes, PrintWriter writer) {
-			this.elementToMerge = elementToMerge;
-			this.elementLevel = elementLevel;
-			this.elementAttributes = elementAttributes;
-			this.writer = writer;
+		public String getPrefix() {
+			return prefix;
+		}
+		public void setPrefix(String prefix) {
+			this.prefix = prefix;
+		}
+		public String getNamespaceUri() {
+			return namespaceUri;
+		}
+		public void setNamespaceUri(String namespaceUri) {
+			this.namespaceUri = namespaceUri;
+		}
+		public String getLocalName() {
+			return localName;
+		}
+		public void setLocalName(String localName) {
+			this.localName = localName;
+		}
+		public String getValue() {
+			return value;
+		}
+		public void setValue(String value) {
+			this.value = value;
+		}
+		public int getNoOfParts() {
+			return noOfParts;
+		}
+		public void setNoOfParts(int noOfParts) {
+			this.noOfParts = noOfParts;
 		}
 
-
-		/**
-		 * Encounters start of element.<br><br>
-		 * {@inheritDoc}
-		 */
 		@Override
-		public void startElement(String uri, String localName, String qName, Attributes atts) throws SAXException {
-			// Clear the element content variable (= text of XML element). If not, there will be problems with html-encoded characters (&lt;) at character()-method:
-			elementContent = "";
-
-			if(localName.equals(elementToMerge)) {
-
-				// We encounter the given element, so we count it's level
-				elementLevelCounter = elementLevelCounter + 1;
-
-				// We encounter the given element at the appropriate level
-				if (elementLevelCounter == elementLevel) {
-
-					// Set a variable that tells us that we are within the appropriate element
-					withinElement = true;
-					fullXmlString = new StringBuilder();
-				}
-			}
-
-			if (withinElement) {
-				
-				// Open the XML-start-tag and add it to a String variable
-				fullXmlString.append("<" + qName);
-
-				// Loop over any XML attribute and add it the XML-start-tag
-				for (int a = 0; a < atts.getLength(); a++) {
-					String attQName = atts.getQName(a);
-					String attValue = StringEscapeUtils.escapeXml10(atts.getValue(a));
-
-					// Add the xsi namespace if appropriate (only if attQName contains "xsi" and the xsi-Namespace was not already defined):
-					if (attQName.contains("xsi:") && atts.getIndex("xmlns:xsi") == -1) {
-						fullXmlString.append(" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"");
-					}
-					fullXmlString.append(" " + attQName + "=\"" + attValue + "\"");
-				}
-				
-				// Add user defined attributes to the "element to merge" (could also be namespaces).
-				if (localName.equals(elementToMerge) && elementAttributes != null && !elementAttributes.isEmpty()) {
-					fullXmlString.append(" " + elementAttributes);
-				}
-
-				// Close the XML-start-tag and add it to a String variable
-				fullXmlString.append(">");
-			}
+		public String toString() {
+			return "CustomAttribute [prefix=" + prefix + ", namespaceUri=" + namespaceUri + ", localName=" + localName
+					+ ", value=" + value + ", noOfParts=" + noOfParts + "]";
 		}
-
-
-		/**
-		 * Encounters end of element.<br><br>
-		 * {@inheritDoc}
-		 */
-		@Override
-		public void endElement(String uri, String localName, String qName) throws SAXException {
-
-			// Get the text content of the XML element
-			String content = elementContent.toString();
-
-			if (withinElement) {
-				// Add the escaped content to a String variable
-				fullXmlString.append(StringEscapeUtils.escapeXml10(content));
-
-				// Reset the content variable for a fresh start
-				elementContent = "";
-
-				// Add the XML-end-tag to a String variable
-				fullXmlString.append("</" + qName + ">");
-
-			}
-
-			if(localName.equals(elementToMerge) ) {
-
-				// We encounter the end of the given element, so we decrease the level counter
-				elementLevelCounter = elementLevelCounter - 1;
-
-				if (elementLevelCounter < elementLevel) {
-
-					// Set a variable that tells us that we are not within the appropriate element
-					withinElement = false;
-
-					// Write the XML string to the file if it's not empty
-					if (!fullXmlString.toString().trim().isEmpty()) {
-						writer.println(fullXmlString);
-					}
-					
-					writer.flush();
-				}
-			}
-		}	
-
-
-		/**
-		 * Reads the content of the current XML element.<br><br>
-		 * {@inheritDoc}
-		 */
-		@Override
-		public void characters(char[] ch, int start, int length) throws SAXException {			
-			elementContent += new String(ch, start, length);
-		}
-
-
-		// Other methods that are not used at the moment
-		@Override
-		public void setDocumentLocator(Locator locator) {}
-
-		@Override
-		public void startDocument() throws SAXException {}
-
-		@Override
-		public void endDocument() throws SAXException {}
-
-		@Override
-		public void startPrefixMapping(String prefix, String uri) throws SAXException {}
-		
-		@Override
-		public void endPrefixMapping(String prefix) throws SAXException {}
-
-		@Override
-		public void ignorableWhitespace(char[] ch, int start, int length) throws SAXException {}
-
-		@Override
-		public void processingInstruction(String target, String data) throws SAXException {}
-
-		@Override
-		public void skippedEntity(String name) throws SAXException {}
-
 	}
 
+
 }
+
