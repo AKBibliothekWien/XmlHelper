@@ -1,15 +1,25 @@
 package ak.xmlhelper;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.Arrays;
+
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLOutputFactory;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamReader;
+import javax.xml.stream.XMLStreamWriter;
 
 //import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.text.StringEscapeUtils;
@@ -42,6 +52,19 @@ public class XmlMerger2 {
 		String fileName = null;
 
 		try {
+			/*
+			FileInputStream fis = new FileInputStream(fSourceDirectory);
+			BufferedInputStream bis = new BufferedInputStream(fis);
+			XMLInputFactory xif = XMLInputFactory.newInstance();
+			XMLOutputFactory xof = XMLOutputFactory.newInstance();
+			XMLStreamWriter xswString = null;
+			XMLStreamWriter xswFile = null;		
+			XMLStreamReader xsr = xif.createXMLStreamReader(bis);
+			int count = 0;
+			FileWriter fw = null;
+			StringWriter sw = null;
+			*/
+			
 			// Get XML files that should be merged
 			File[] files = fSourceDirectory.listFiles(new FilenameFilter() {
 				public boolean accept(File dir, String name) {
@@ -54,6 +77,9 @@ public class XmlMerger2 {
 				return true;
 			}
 			
+			
+			
+			/*
 			// Create SAX parser:
 			XMLReader xmlReader = XMLReaderFactory.createXMLReader();
 
@@ -95,6 +121,7 @@ public class XmlMerger2 {
 			if (writer!=null) { writer.close(); }
 
 			isMergingSuccessful = true;
+			*/
 
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
@@ -102,8 +129,7 @@ public class XmlMerger2 {
 		} catch (IOException e) {
 			System.err.println("Error when parsing file: " + fileName);
 			e.printStackTrace();
-		} catch (SAXException e) {
-			System.err.println("SAXException when parsing file: " + fileName);
+		} catch (XMLStreamException e) {
 			e.printStackTrace();
 		}
 
@@ -120,7 +146,8 @@ public class XmlMerger2 {
 		String elementToMerge;
 		PrintWriter writer;
 		String elementContent;
-		String fullXmlString = "";
+		//String fullXmlString = "";
+		StringBuilder fullXmlString = null;
 		int elementLevel = 0;
 		int elementLevelCounter = 0;
 		boolean withinElement = false;
@@ -160,13 +187,14 @@ public class XmlMerger2 {
 
 					// Set a variable that tells us that we are within the appropriate element
 					withinElement = true;
+					fullXmlString = new StringBuilder();
 				}
 			}
 
 			if (withinElement) {
 				
 				// Open the XML-start-tag and add it to a String variable
-				fullXmlString += "<" + qName;
+				fullXmlString.append("<" + qName);
 
 				// Loop over any XML attribute and add it the XML-start-tag
 				for (int a = 0; a < atts.getLength(); a++) {
@@ -175,18 +203,18 @@ public class XmlMerger2 {
 
 					// Add the xsi namespace if appropriate (only if attQName contains "xsi" and the xsi-Namespace was not already defined):
 					if (attQName.contains("xsi:") && atts.getIndex("xmlns:xsi") == -1) {
-						fullXmlString += " xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"";
+						fullXmlString.append(" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"");
 					}
-					fullXmlString += " " + attQName + "=\"" + attValue + "\"";
+					fullXmlString.append(" " + attQName + "=\"" + attValue + "\"");
 				}
 				
 				// Add user defined attributes to the "element to merge" (could also be namespaces).
 				if (localName.equals(elementToMerge) && elementAttributes != null && !elementAttributes.isEmpty()) {
-					fullXmlString += " " + elementAttributes;
+					fullXmlString.append(" " + elementAttributes);
 				}
 
 				// Close the XML-start-tag and add it to a String variable
-				fullXmlString += ">";
+				fullXmlString.append(">");
 			}
 		}
 
@@ -203,13 +231,13 @@ public class XmlMerger2 {
 
 			if (withinElement) {
 				// Add the escaped content to a String variable
-				fullXmlString += StringEscapeUtils.escapeXml10(content);
+				fullXmlString.append(StringEscapeUtils.escapeXml10(content));
 
 				// Reset the content variable for a fresh start
 				elementContent = "";
 
 				// Add the XML-end-tag to a String variable
-				fullXmlString += "</" + qName + ">";
+				fullXmlString.append("</" + qName + ">");
 
 			}
 
@@ -224,12 +252,11 @@ public class XmlMerger2 {
 					withinElement = false;
 
 					// Write the XML string to the file if it's not empty
-					if (!fullXmlString.trim().isEmpty()) {
+					if (!fullXmlString.toString().trim().isEmpty()) {
 						writer.println(fullXmlString);
 					}
-
-					// Reset the String for the full XML for a fresh start
-					fullXmlString = "";
+					
+					writer.flush();
 				}
 			}
 		}	
