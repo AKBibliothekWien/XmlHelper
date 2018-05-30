@@ -51,6 +51,7 @@ public class XmlSplitter4 {
 			FileWriter fw = null;
 			StringWriter sw = null;
 			StringBuilder fileName = null;
+			boolean isFileNameNode = false;
 
 			while(xsr.hasNext()) {
 				int e = xsr.next();
@@ -70,36 +71,31 @@ public class XmlSplitter4 {
 					}
 
 					if (counter >= nodeCount) {
-
+						
+						// Write the opening XML element
 						if (xswString != null) {
 							xswString.writeStartElement(localName);
 						}
 
+						// Check if the opening XML element has attributes
 						int noAttr = xsr.getAttributeCount();
 						if (noAttr > 0) {
+							// If we have attributes, write them to the opening XML element
 							for (int i = 0; i < noAttr; i++) {
 								String attrName = xsr.getAttributeLocalName(i);
 								String attrValue = xsr.getAttributeValue(i);
 								xswString.writeAttribute(attrName, attrValue);
 								
-								// Get file name
+								// Check if we encounter the file namenode, optionally with given attributes
 								if (localName.equals(condNodeForFilename)) {
-									String elementText = null;
 									if (condAttrsForFilename != null && !condAttrsForFilename.isEmpty()) {
 										Map<String, String> nodeAttributes = new HashMap<String, String>();
-										
 										nodeAttributes.put(attrName, attrValue);
 										if (nodeAttributes.entrySet().containsAll(condAttrsForFilename.entrySet())) {
-											elementText = xsr.getElementText();
-											fileName.append(this.destinationDirectoryStr);	
-											fileName.append(elementText);
-											fileName.append(".xml");
+											isFileNameNode = true;									
 										}
 									} else {
-										elementText = xsr.getElementText();
-										fileName.append(this.destinationDirectoryStr);	
-										fileName.append(elementText);
-										fileName.append(".xml");
+										isFileNameNode = true;
 									}
 								}
 							}
@@ -109,7 +105,17 @@ public class XmlSplitter4 {
 					
 				case XMLStreamConstants.CHARACTERS:
 					if (counter >= nodeCount) {
-						xswString.writeCharacters(xsr.getText());
+						// Write the text content
+						String textContent = xsr.getText();
+						xswString.writeCharacters(textContent);
+						
+						// If we encounter the filename node, set the filename for the splitted XML file accordingly
+						if (isFileNameNode) {
+							fileName.append(this.destinationDirectoryStr);	
+							fileName.append(textContent);
+							fileName.append(".xml");
+							isFileNameNode = false; // Reset the filename flag
+						}
 					}
 					break;
 					
@@ -117,15 +123,15 @@ public class XmlSplitter4 {
 					String localNameEnd = xsr.getLocalName();
 
 					if (counter >= nodeCount) {
+						// Write the closing XML element
 						xswString.writeEndElement();
 					}
 
 					if (localNameEnd.equals(nodeNametoExtract)) {
 						counter --;
 
+						// We are at the end at the splitted element, so we write it to a file
 						if (counter == 0) {
-							xswString.writeEndElement(); // Closing record element
-							
 							fw = new FileWriter(fileName.toString());
 							fw.write(sw.toString());
 							xswFile = xof.createXMLStreamWriter(fw);
@@ -149,6 +155,4 @@ public class XmlSplitter4 {
 		}
 
 	}
-
-
 }
