@@ -47,7 +47,7 @@ public class XmlSplitter4 {
 			XMLStreamWriter xswString = null;
 			XMLStreamWriter xswFile = null;		
 			XMLStreamReader xsr = xif.createXMLStreamReader(bis);
-			int count = 0;
+			int counter = 0;
 			FileWriter fw = null;
 			StringWriter sw = null;
 			StringBuilder fileName = null;
@@ -60,16 +60,16 @@ public class XmlSplitter4 {
 					String localName = xsr.getLocalName();
 
 					if (localName.equals(nodeNametoExtract)) {
-						count++;
+						counter++;
 
-						if (count == nodeCount) {
+						if (counter == nodeCount) {
 							fileName = new StringBuilder();
 							sw = new StringWriter();
 							xswString = xof.createXMLStreamWriter(sw);
 						}
 					}
 
-					if (count >= nodeCount) {
+					if (counter >= nodeCount) {
 
 						if (xswString != null) {
 							xswString.writeStartElement(localName);
@@ -108,7 +108,7 @@ public class XmlSplitter4 {
 					break;
 					
 				case XMLStreamConstants.CHARACTERS:
-					if (count >= nodeCount) {
+					if (counter >= nodeCount) {
 						xswString.writeCharacters(xsr.getText());
 					}
 					break;
@@ -116,14 +116,14 @@ public class XmlSplitter4 {
 				case XMLStreamConstants.END_ELEMENT:
 					String localNameEnd = xsr.getLocalName();
 
-					if (count >= nodeCount) {
+					if (counter >= nodeCount) {
 						xswString.writeEndElement();
 					}
 
 					if (localNameEnd.equals(nodeNametoExtract)) {
-						count --;
+						counter --;
 
-						if (count == 0) {
+						if (counter == 0) {
 							xswString.writeEndElement(); // Closing record element
 							
 							fw = new FileWriter(fileName.toString());
