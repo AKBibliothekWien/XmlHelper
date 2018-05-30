@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,7 +16,6 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 
 import ak.xmlhelper.classes.XmlField;
@@ -94,53 +92,6 @@ public class Main {
 				.numberOfArgs(6)
 				.build();
 
-		// split2
-		Option oSplit2= Option
-				.builder()
-				.required(true)
-				.longOpt("split2")
-				.desc("TEST version 2 of splitting one XML file into multiple single XML files. args:"
-						+ "\n 1. Path to a directory of file(s) to split"
-						+ "\n 2. NodeToExtractName (e. g. \"record\")"
-						+ "\n 3. NodeToExtractCount (start with 0 for top level)"
-						+ "\n 4. ConditionNodeForFilename (e. g. \"controlfield\")"
-						+ "\n 5. ConditionAttrsForFilename (e. g. \"attr1=value1,attr2=value2,...\" or \"null\" if none)"
-						+ "\n 6. DestinationDir")
-				.hasArgs()
-				.numberOfArgs(6)
-				.build();
-
-		// split3
-		Option oSplit3= Option
-				.builder()
-				.required(true)
-				.longOpt("split3")
-				.desc("TEST version 3 of splitting one XML file into multiple single XML files. args:"
-						+ "\n 1. Path to a directory of file(s) to split"
-						+ "\n 2. NodeToExtractName (e. g. \"record\")"
-						+ "\n 3. NodeToExtractCount (start with 0 for top level)"
-						+ "\n 4. ConditionNodeForFilename (e. g. \"controlfield\")"
-						+ "\n 5. ConditionAttrsForFilename (e. g. \"attr1=value1,attr2=value2,...\" or \"null\" if none)"
-						+ "\n 6. DestinationDir")
-				.hasArgs()
-				.numberOfArgs(6)
-				.build();
-
-		// split4
-		Option oSplit4= Option
-				.builder()
-				.required(true)
-				.longOpt("split4")
-				.desc("TEST version 4 of splitting one XML file into multiple single XML files. args:"
-						+ "\n 1. Path to a directory of file(s) to split"
-						+ "\n 2. NodeToExtractName (e. g. \"record\")"
-						+ "\n 3. NodeToExtractCount (start with 0 for top level)"
-						+ "\n 4. ConditionNodeForFilename (e. g. \"controlfield\")"
-						+ "\n 5. ConditionAttrsForFilename (e. g. \"attr1=value1,attr2=value2,...\" or \"null\" if none)"
-						+ "\n 6. DestinationDir")
-				.hasArgs()
-				.numberOfArgs(6)
-				.build();
 		// c: count
 		Option oCount= Option
 				.builder("c")
@@ -197,9 +148,6 @@ public class Main {
 		optionGroup.addOption(oMerge);
 		optionGroup.addOption(oMerge2);
 		optionGroup.addOption(oSplit);
-		optionGroup.addOption(oSplit2);
-		optionGroup.addOption(oSplit3);
-		optionGroup.addOption(oSplit4);
 		optionGroup.addOption(oCount);
 		optionGroup.addOption(oCountWithin);
 		optionGroup.addOption(oClean);
@@ -253,7 +201,7 @@ public class Main {
 
 			case "m": {
 				long startTime = System.currentTimeMillis();
-				
+
 				System.out.println("\nStart merging XML files.");
 
 				String[] mergeArgs = cmd.getOptionValues("m");
@@ -279,14 +227,14 @@ public class Main {
 
 				long endTime = System.currentTimeMillis();
 				System.out.println("Time elapsed:\t" + DurationFormatUtils.formatDurationHMS(endTime - startTime));
-				
+
 				break;
 			}
 
 			case "merge2": {
-				
+
 				long startTime = System.currentTimeMillis();
-				
+
 				System.out.println("\nTEST merger 2 - Start merging XML files.");
 
 				String[] mergeArgs = cmd.getOptionValues("merge2");
@@ -309,7 +257,7 @@ public class Main {
 						return;
 					}
 				}
-				
+
 				long endTime = System.currentTimeMillis();
 				System.out.println("Time elapsed:\t" + DurationFormatUtils.formatDurationHMS(endTime - startTime));
 
@@ -317,21 +265,17 @@ public class Main {
 			}
 
 			case "s": {
-
 				long startTime = System.currentTimeMillis();
 
-				System.out.println("\nStart splitting XML file.");
+				System.out.println("Start splitting XML file.");
 				String[] splitArgs = cmd.getOptionValues("s");
-				List<File> filesToSplit = new ArrayList<File>();
-
-
 				String strFileToSplit = (splitArgs[0] != null) ? splitArgs[0] : null;
 				String nodeToExtractName = (splitArgs[1] != null) ? splitArgs[1] : null;
 				int nodeToExtractCount = (splitArgs[2] != null) ? Integer.valueOf(splitArgs[2]) : 0;
 				String conditionNodeForFilename = (splitArgs[3] != null) ? splitArgs[3] : null;
 				Map<String, String> conditionAttrsForFilename = new HashMap<String, String>();
 				String destinationDir = (splitArgs[5] != null) ? splitArgs[5] : null;
-
+				File[] filesToSplit = null;
 				if (strFileToSplit != null && nodeToExtractName != null && conditionNodeForFilename != null && destinationDir != null) {
 
 					XmlSplitter xmls = new XmlSplitter(destinationDir);
@@ -345,24 +289,19 @@ public class Main {
 
 					if (isDir) {
 						if (fileToSplit != null && fileToSplit.canRead()) {
-							// Get a sorted list (by filename) of all XML files:
-							List<File> filteredFiles = (List<File>)FileUtils.listFiles(fileToSplit, new String[] {"xml"}, true); // Get all xml-files recursively
-							for (File f : filteredFiles) {
-								if (f.isFile() && f.canRead() && f.getName().endsWith(".xml")) {
-									filesToSplit.add(f);
-								}
-							}
-							Collections.sort(filesToSplit); // Sort oldest to newest
-						}	
 
-						/*
-						File[] arrFilesToSplit = fileToSplit.listFiles();
-						for (File f : arrFilesToSplit) {
-							if (f.isFile() && f.canRead() && f.getName().endsWith(".xml")) {
-								filesToSplit.add(f);
-							}
+							// Get a sorted list (by filename) of all XML files:
+							filesToSplit = fileToSplit.listFiles(new FilenameFilter() {
+								@Override
+								public boolean accept(File dir, String name) {
+									if(name.toLowerCase().endsWith(".xml")) {
+										return true;
+									}
+									return false;
+								}
+							});
+							Arrays.sort(filesToSplit);
 						}
-						 */
 					}
 
 					String strConditionAttrsForFilename = (splitArgs[4] != null) ? splitArgs[4] : null;
@@ -378,249 +317,19 @@ public class Main {
 						}
 					}
 
-					if (isDir && !filesToSplit.isEmpty()) {
+					if (isDir && filesToSplit.length > 0) {
 						// Split XMLs. Files will be overwritten by newer files with same name:
 						for (File fileForSplitting : filesToSplit) {
-							System.out.print("Splitting file " + fileForSplitting.getAbsolutePath() + "                                                        \r");
+							System.out.print("Splitting file " + fileForSplitting.getAbsolutePath() + "                                                        \n");
 							xmls.split(fileForSplitting.getAbsolutePath(), nodeToExtractName, nodeToExtractCount, conditionNodeForFilename, conditionAttrsForFilename);
 						}
 					} else if (!isDir){
-						System.out.print("Splitting file " + fileToSplit.getAbsolutePath() + "                                                        \r");
+						System.out.print("Splitting file " + fileToSplit.getAbsolutePath() + "                                                        \n");
 						xmls.split(fileToSplit.getAbsolutePath(), nodeToExtractName, nodeToExtractCount, conditionNodeForFilename, conditionAttrsForFilename);
 					}
 				}
 
 				long endTime = System.currentTimeMillis();
-				System.out.println("Time elapsed:\t" + DurationFormatUtils.formatDurationHMS(endTime - startTime));
-
-				break;
-			}
-
-			case "split2": {
-
-				long startTime = System.currentTimeMillis();
-
-				System.out.println("\nTEST splitter2 - Start splitting XML file.");
-				String[] splitArgs = cmd.getOptionValues("split2");
-				//List<File> filesToSplit = new ArrayList<File>();
-
-				String strFileToSplit = (splitArgs[0] != null) ? splitArgs[0] : null;
-				String nodeToExtractName = (splitArgs[1] != null) ? splitArgs[1] : null;
-				int nodeToExtractCount = (splitArgs[2] != null) ? Integer.valueOf(splitArgs[2]) : 0;
-				String conditionNodeForFilename = (splitArgs[3] != null) ? splitArgs[3] : null;
-				Map<String, String> conditionAttrsForFilename = new HashMap<String, String>();
-				String destinationDir = (splitArgs[5] != null) ? splitArgs[5] : null;
-				File[] filesToSplit = null;
-
-				if (strFileToSplit != null && nodeToExtractName != null && conditionNodeForFilename != null && destinationDir != null) {
-
-					XmlSplitter2 xmls2 = new XmlSplitter2(destinationDir);
-
-					// Check if file or path:
-					File fileToSplit = new File(strFileToSplit);
-					boolean isDir = false;
-					if (fileToSplit.isDirectory()) {
-						isDir = true;
-					}
-
-					if (isDir) {
-						if (fileToSplit != null && fileToSplit.canRead()) {
-
-							// Get a sorted list (by filename) of all XML files:
-							filesToSplit = fileToSplit.listFiles(new FilenameFilter() {
-								@Override
-								public boolean accept(File dir, String name) {
-									if(name.toLowerCase().endsWith(".xml")) {
-										return true;
-									}
-									return false;
-								}
-							});
-							Arrays.sort(filesToSplit);
-						}
-					}
-
-					String strConditionAttrsForFilename = (splitArgs[4] != null) ? splitArgs[4] : null;
-					if (strConditionAttrsForFilename != null && !strConditionAttrsForFilename.equals("null") && !strConditionAttrsForFilename.isEmpty()) {
-						String[] arrConditionAttrsForFilename = strConditionAttrsForFilename.split("\\s*,\\s*");
-						for (String conditionAttrForFilename : arrConditionAttrsForFilename) {
-							String[] attrValuePair = conditionAttrForFilename.split("\\s*=\\s*");
-							if (attrValuePair.length == 2) {
-								String attr = attrValuePair[0];
-								String value = attrValuePair[1];
-								conditionAttrsForFilename.put(attr, value);
-							}
-						}
-					}
-
-					if (isDir && filesToSplit.length > 0) {
-						// Split XMLs. Files will be overwritten by newer files with same name:
-						for (File fileForSplitting : filesToSplit) {
-							System.out.print("Splitting file " + fileForSplitting.getAbsolutePath() + "                                                        \n");
-							xmls2.split(fileForSplitting.getAbsolutePath(), nodeToExtractName, nodeToExtractCount, conditionNodeForFilename, conditionAttrsForFilename);
-						}
-					} else if (!isDir){
-						System.out.print("Splitting file " + fileToSplit.getAbsolutePath() + "                                                        \n");
-						xmls2.split(fileToSplit.getAbsolutePath(), nodeToExtractName, nodeToExtractCount, conditionNodeForFilename, conditionAttrsForFilename);
-					}
-				}
-
-				long endTime = System.currentTimeMillis();
-				System.out.println("Time elapsed:\t" + DurationFormatUtils.formatDurationHMS(endTime - startTime));
-
-				break;
-			}
-
-
-			case "split3": {
-
-				//long startTime = System.nanoTime();
-				long startTime = System.currentTimeMillis();
-
-				System.out.println("\nTEST splitter3 - Start splitting XML file.");
-				String[] splitArgs = cmd.getOptionValues("split3");
-				//List<File> filesToSplit = new ArrayList<File>();
-
-				String strFileToSplit = (splitArgs[0] != null) ? splitArgs[0] : null;
-				String nodeToExtractName = (splitArgs[1] != null) ? splitArgs[1] : null;
-				int nodeToExtractCount = (splitArgs[2] != null) ? Integer.valueOf(splitArgs[2]) : 0;
-				String conditionNodeForFilename = (splitArgs[3] != null) ? splitArgs[3] : null;
-				Map<String, String> conditionAttrsForFilename = new HashMap<String, String>();
-				String destinationDir = (splitArgs[5] != null) ? splitArgs[5] : null;
-				File[] filesToSplit = null;
-
-				if (strFileToSplit != null && nodeToExtractName != null && conditionNodeForFilename != null && destinationDir != null) {
-
-					XmlSplitter3 xmls3 = new XmlSplitter3(destinationDir);
-
-					// Check if file or path:
-					File fileToSplit = new File(strFileToSplit);
-					boolean isDir = false;
-					if (fileToSplit.isDirectory()) {
-						isDir = true;
-					}
-
-					if (isDir) {
-						if (fileToSplit != null && fileToSplit.canRead()) {
-
-							// Get a sorted list (by filename) of all XML files:
-							filesToSplit = fileToSplit.listFiles(new FilenameFilter() {
-								@Override
-								public boolean accept(File dir, String name) {
-									if(name.toLowerCase().endsWith(".xml")) {
-										return true;
-									}
-									return false;
-								}
-							});
-							Arrays.sort(filesToSplit);
-						}
-					}
-
-					String strConditionAttrsForFilename = (splitArgs[4] != null) ? splitArgs[4] : null;
-					if (strConditionAttrsForFilename != null && !strConditionAttrsForFilename.equals("null") && !strConditionAttrsForFilename.isEmpty()) {
-						String[] arrConditionAttrsForFilename = strConditionAttrsForFilename.split("\\s*,\\s*");
-						for (String conditionAttrForFilename : arrConditionAttrsForFilename) {
-							String[] attrValuePair = conditionAttrForFilename.split("\\s*=\\s*");
-							if (attrValuePair.length == 2) {
-								String attr = attrValuePair[0];
-								String value = attrValuePair[1];
-								conditionAttrsForFilename.put(attr, value);
-							}
-						}
-					}
-
-					if (isDir && filesToSplit.length > 0) {
-						// Split XMLs. Files will be overwritten by newer files with same name:
-						for (File fileForSplitting : filesToSplit) {
-							System.out.print("Splitting file " + fileForSplitting.getAbsolutePath() + "                                                        \n");
-							xmls3.split(fileForSplitting.getAbsolutePath(), nodeToExtractName, nodeToExtractCount, conditionNodeForFilename, conditionAttrsForFilename);
-						}
-					} else if (!isDir){
-						System.out.print("Splitting file " + fileToSplit.getAbsolutePath() + "                                                        \n");
-						xmls3.split(fileToSplit.getAbsolutePath(), nodeToExtractName, nodeToExtractCount, conditionNodeForFilename, conditionAttrsForFilename);
-					}
-				}
-
-				long endTime = System.currentTimeMillis();
-
-				System.out.println("Time elapsed:\t" + DurationFormatUtils.formatDurationHMS(endTime - startTime));
-
-				break;
-			}
-
-			case "split4": {
-
-				//long startTime = System.nanoTime();
-				long startTime = System.currentTimeMillis();
-
-				System.out.println("\nTEST splitter4 - Start splitting XML file.");
-				String[] splitArgs = cmd.getOptionValues("split4");
-				//List<File> filesToSplit = new ArrayList<File>();
-
-				String strFileToSplit = (splitArgs[0] != null) ? splitArgs[0] : null;
-				String nodeToExtractName = (splitArgs[1] != null) ? splitArgs[1] : null;
-				int nodeToExtractCount = (splitArgs[2] != null) ? Integer.valueOf(splitArgs[2]) : 0;
-				String conditionNodeForFilename = (splitArgs[3] != null) ? splitArgs[3] : null;
-				Map<String, String> conditionAttrsForFilename = new HashMap<String, String>();
-				String destinationDir = (splitArgs[5] != null) ? splitArgs[5] : null;
-				File[] filesToSplit = null;
-
-				if (strFileToSplit != null && nodeToExtractName != null && conditionNodeForFilename != null && destinationDir != null) {
-
-					XmlSplitter4 xmls4 = new XmlSplitter4(destinationDir);
-
-					// Check if file or path:
-					File fileToSplit = new File(strFileToSplit);
-					boolean isDir = false;
-					if (fileToSplit.isDirectory()) {
-						isDir = true;
-					}
-
-					if (isDir) {
-						if (fileToSplit != null && fileToSplit.canRead()) {
-
-							// Get a sorted list (by filename) of all XML files:
-							filesToSplit = fileToSplit.listFiles(new FilenameFilter() {
-								@Override
-								public boolean accept(File dir, String name) {
-									if(name.toLowerCase().endsWith(".xml")) {
-										return true;
-									}
-									return false;
-								}
-							});
-							Arrays.sort(filesToSplit);
-						}
-					}
-
-					String strConditionAttrsForFilename = (splitArgs[4] != null) ? splitArgs[4] : null;
-					if (strConditionAttrsForFilename != null && !strConditionAttrsForFilename.equals("null") && !strConditionAttrsForFilename.isEmpty()) {
-						String[] arrConditionAttrsForFilename = strConditionAttrsForFilename.split("\\s*,\\s*");
-						for (String conditionAttrForFilename : arrConditionAttrsForFilename) {
-							String[] attrValuePair = conditionAttrForFilename.split("\\s*=\\s*");
-							if (attrValuePair.length == 2) {
-								String attr = attrValuePair[0];
-								String value = attrValuePair[1];
-								conditionAttrsForFilename.put(attr, value);
-							}
-						}
-					}
-
-					if (isDir && filesToSplit.length > 0) {
-						// Split XMLs. Files will be overwritten by newer files with same name:
-						for (File fileForSplitting : filesToSplit) {
-							System.out.print("Splitting file " + fileForSplitting.getAbsolutePath() + "                                                        \n");
-							xmls4.split(fileForSplitting.getAbsolutePath(), nodeToExtractName, nodeToExtractCount, conditionNodeForFilename, conditionAttrsForFilename);
-						}
-					} else if (!isDir){
-						System.out.print("Splitting file " + fileToSplit.getAbsolutePath() + "                                                        \n");
-						xmls4.split(fileToSplit.getAbsolutePath(), nodeToExtractName, nodeToExtractCount, conditionNodeForFilename, conditionAttrsForFilename);
-					}
-				}
-
-				long endTime = System.currentTimeMillis();
-
 				System.out.println("Time elapsed:\t" + DurationFormatUtils.formatDurationHMS(endTime - startTime));
 
 				break;
