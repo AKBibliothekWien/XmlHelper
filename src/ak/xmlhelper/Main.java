@@ -43,11 +43,29 @@ public class Main {
 				.build();
 
 		// m: merge
-		Option oMerge= Option
+		Option oMerge = Option
 				.builder("m")
 				.required(true)
 				.longOpt("merge")
 				.desc("Merge multiple XML files to one single XML file. Args:"
+						+ "\n 1. Path to XML files to merge"
+						+ "\n 2. Element to merge (e. g. record)"
+						+ "\n 3. Element level (for nested elements with same name. 1 for top (= first) level, 2 for second level, ...)"
+						+ "\n 4. New output XML file with merged elements"
+						+ "\n 5. Parent element in new XML file (e. g. collection)"
+						+ "\n 6. Optional: Parent attributes for parent element. Escape double-quotes and surround with double quotes when there are spaces (e. g. for collection: \"xmlns=\\\"http://www.loc.gov/MARC21/slim\\\" a:b=\\\"c\\\"\")"
+						+ "\n 7. Optional: Element attributes for merged elements. Escape double-quotes and surround with double quotes when there are spaces (e. g. for record: \"xmlns:marc=\\\"http://www.loc.gov/MARC21/slim\\\" a:b=\\\"c\\\"\")")
+				.hasArgs()
+				.numberOfArgs(7)
+				.optionalArg(true)
+				.build();
+
+		// merge2
+		Option oMerge2 = Option
+				.builder()
+				.required(true)
+				.longOpt("merge2")
+				.desc("Test version 2 of merging multiple XML files to one single XML file. Args:"
 						+ "\n 1. Path to XML files to merge"
 						+ "\n 2. Element to merge (e. g. record)"
 						+ "\n 3. Element level (for nested elements with same name. 1 for top (= first) level, 2 for second level, ...)"
@@ -107,7 +125,7 @@ public class Main {
 				.hasArgs()
 				.numberOfArgs(6)
 				.build();
-		
+
 		// split4
 		Option oSplit4= Option
 				.builder()
@@ -177,6 +195,7 @@ public class Main {
 
 		optionGroup.addOption(oValidate);
 		optionGroup.addOption(oMerge);
+		optionGroup.addOption(oMerge2);
 		optionGroup.addOption(oSplit);
 		optionGroup.addOption(oSplit2);
 		optionGroup.addOption(oSplit3);
@@ -233,6 +252,8 @@ public class Main {
 			}
 
 			case "m": {
+				long startTime = System.currentTimeMillis();
+				
 				System.out.println("\nStart merging XML files.");
 
 				String[] mergeArgs = cmd.getOptionValues("m");
@@ -255,6 +276,42 @@ public class Main {
 						return;
 					}
 				}
+
+				long endTime = System.currentTimeMillis();
+				System.out.println("Time elapsed:\t" + DurationFormatUtils.formatDurationHMS(endTime - startTime));
+				
+				break;
+			}
+
+			case "merge2": {
+				
+				long startTime = System.currentTimeMillis();
+				
+				System.out.println("\nTEST merger 2 - Start merging XML files.");
+
+				String[] mergeArgs = cmd.getOptionValues("merge2");
+				String pathToFiles = (mergeArgs[0] != null) ? mergeArgs[0] : null;
+				String elementToMerge = (mergeArgs[1] != null) ? mergeArgs[1] : null;
+				int elementLevel = (mergeArgs[2] != null) ? Integer.valueOf(mergeArgs[2]) : 0;
+				String newFile = (mergeArgs[3] != null) ? mergeArgs[3] : null;
+				String newXmlParentElement = (mergeArgs[4] != null) ? mergeArgs[4] : null;
+				String parentAttributes = (mergeArgs.length > 5 && mergeArgs[5] != null) ? mergeArgs[5] : null;
+				String elementAttributes = (mergeArgs.length > 6 && mergeArgs[6] != null) ? mergeArgs[6] : null;
+
+				if (pathToFiles != null && elementToMerge != null && newFile != null && newXmlParentElement != null) {
+					XmlMerger2 xmlm2 = new XmlMerger2(); // Start merging
+					boolean isMergingSuccessful = xmlm2.mergeElements(pathToFiles, newFile, newXmlParentElement, elementToMerge, elementLevel, parentAttributes, elementAttributes);
+
+					if (isMergingSuccessful) {
+						System.out.println("Merging files was successful.");
+					} else {
+						System.err.println("Error while merging files!");
+						return;
+					}
+				}
+				
+				long endTime = System.currentTimeMillis();
+				System.out.println("Time elapsed:\t" + DurationFormatUtils.formatDurationHMS(endTime - startTime));
 
 				break;
 			}
@@ -491,7 +548,7 @@ public class Main {
 
 				break;
 			}
-			
+
 			case "split4": {
 
 				//long startTime = System.nanoTime();
