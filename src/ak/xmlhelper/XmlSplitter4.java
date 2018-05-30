@@ -137,6 +137,7 @@ public class XmlSplitter4 {
 							xswFile = xof.createXMLStreamWriter(fw);
 							xswString.flush();
 							xswFile.flush();
+							fw.flush();
 							fileName = null;
 						} 
 					}
@@ -146,6 +147,26 @@ public class XmlSplitter4 {
 					break;
 				}
 			}
+			
+			if (xswString != null) {
+				xswString.close();
+			}
+			if (xswFile != null) {
+				xswFile.close();
+			}
+			if (fw != null) {
+				fw.close();
+			}
+			if (sw != null) {
+				sw.close();
+			}
+			if (bis != null) {
+				bis.close();
+			}
+			if (fis != null) {
+				fis.close();
+			}
+
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		} catch (XMLStreamException e) {
