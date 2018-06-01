@@ -17,7 +17,7 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLStreamWriter;
 
-public class XmlMerger2 {
+public class XmlMerger {
 
 	public boolean mergeElements(String sourceDirectory, String destinationFile, String parentNode, String mergeNode, int mergeNodeLevel, String parentNodeAttr, String mergeNodeAttr) {
 		boolean isMergingSuccessful = false;
