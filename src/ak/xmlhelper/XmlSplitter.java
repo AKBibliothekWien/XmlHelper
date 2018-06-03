@@ -176,4 +176,8 @@ public class XmlSplitter {
 		}
 
 	}
+	
+	public File getDestinationDirectory() {		
+		return this.destinationDirectory;
+	}
 }
