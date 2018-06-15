@@ -245,7 +245,7 @@ public class XmlMerger {
 			if (fw != null) {
 				fw.close();
 			}
-			if (xsw != null) {
+			if (xsr != null) {
 				xsr.close();
 			}
 			if (bis != null) {
