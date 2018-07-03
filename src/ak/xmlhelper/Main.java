@@ -158,7 +158,7 @@ public class Main {
 					File[] fileList = file.listFiles();
 					for (File fileInList : fileList) {
 						if (fileInList.isFile() && fileInList.canRead() && fileInList.getName().endsWith(".xml")) {
-							System.out.print("Validating XML file " + fileInList.getName() + "                                                                        \r");
+							System.out.print("\nValidating XML file " + fileInList.getName());
 							if(!validator.validateXML(fileInList.getAbsolutePath())) {
 								System.err.println("XML file not valid: " + fileInList.getAbsolutePath());
 								return; // TODO: break instead of return?
@@ -282,8 +282,7 @@ public class Main {
 				if (xmlFile != null && tagName != null) {
 					XmlCounter xmlc = new XmlCounter();
 					int noOfElements = xmlc.count(xmlFile, tagName, attrName, attrValue, true);
-					System.out.print("                                                                                              \r");
-					System.out.print("Total elements: " + noOfElements + "\n");
+					System.out.print("\nTotal elements: " + noOfElements + "\n");
 				}
 				break;
 			}
@@ -314,7 +313,6 @@ public class Main {
 				if (xmlFile != null && tagNameCount != null && tagNameCountWithin != null) {
 					XmlCounter xmlc = new XmlCounter();
 					int noOfElements = xmlc.countWithin(xmlFile, tagNameCount, attrNameCount, attrValueCount, tagNameCountWithin, xmlFields, outFile);
-					System.out.print("                                                                                              \r");
 					System.out.print("\nTotal elements: " + noOfElements + "\n");
 				}
 

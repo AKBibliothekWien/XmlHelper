@@ -164,15 +164,15 @@ public class XmlCounter {
 						if (attrs.getValue(this.attrName) != null) { // Attribute name exists
 							if (attrs.getValue(this.attrName).equals(this.attrValue)) { // Attribute value exists
 								noOfElements = noOfElements + 1;
-								print("No of <" + this.tagNameCount + " " + this.attrName + "=\"" + attrs.getValue(this.attrName) + "\" ... />: " + noOfElements + "               \r");
+								print("\nNo of <" + this.tagNameCount + " " + this.attrName + "=\"" + attrs.getValue(this.attrName) + "\" ... />: " + noOfElements);
 							} else if (this.attrValue == null){
 								noOfElements = noOfElements + 1;
-								print("No of <" + this.tagNameCount + " " + this.attrName + "=\"...\" ... />: " + noOfElements + "               \r");
+								print("\nNo of <" + this.tagNameCount + " " + this.attrName + "=\"...\" ... />: " + noOfElements);
 							}
 						}
 					} else if ((this.attrName == null || this.attrName.isEmpty()) && (this.attrValue == null || this.attrValue.isEmpty())) {
 						noOfElements = noOfElements + 1;
-						print("No of <" + this.tagNameCount + " ... />: " + noOfElements + "               \r");
+						print("\nNo of <" + this.tagNameCount + " ... />: " + noOfElements);
 					}
 				}
 				
