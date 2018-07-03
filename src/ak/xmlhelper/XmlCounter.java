@@ -45,10 +45,13 @@ public class XmlCounter {
 			noOfElements = cch.getNoOfElements();
 			reader.close();
 		} catch (SAXException e) {
+			System.err.println("SAXException while counting");
 			e.printStackTrace();
 		} catch (FileNotFoundException e) {
+			System.err.println("File not found when trying to run XML counter: " + xmlFile);
 			e.printStackTrace();
 		} catch (IOException e) {
+			System.err.println("IOException while counting");
 			e.printStackTrace();
 		}
 
@@ -81,10 +84,13 @@ public class XmlCounter {
 			noOfElements = cch.getNoOfElements();
 			reader.close();
 		} catch (SAXException e) {
+			System.err.println("SAXException while counting");
 			e.printStackTrace();
 		} catch (FileNotFoundException e) {
+			System.err.println("File not found when trying to run XML counter: " + xmlFile);
 			e.printStackTrace();
 		} catch (IOException e) {
+			System.err.println("IOException while counting");
 			e.printStackTrace();
 		}
 
@@ -129,6 +135,7 @@ public class XmlCounter {
 					fileWriter = new FileWriter(outFile, true);
 					this.bufferFileWriter = new BufferedWriter(fileWriter);
 				} catch (IOException e) {
+					System.err.println("IOException while counting");
 					e.printStackTrace();
 				}
 			}

@@ -65,6 +65,7 @@ public class XmlCleaner {
 			try {
 				out = new BufferedOutputStream(new FileOutputStream(cleanedFileName), 1024*1024);
 			} catch (FileNotFoundException e1) {
+				System.err.println("File not found: " + cleanedFileName);
 				e1.printStackTrace();
 			}
 			PrintWriter writer = null;
@@ -130,8 +131,8 @@ public class XmlCleaner {
 				isCleaningDone = true;
 			} catch (Exception e) {
 				isCleaningDone = false;
-				System.err.println(e.getMessage());
-				System.err.println(e.getStackTrace());
+				System.err.println("Error while cleaning file: " + e.getMessage());
+				e.printStackTrace();
 			}
 			finally {
 				writer.flush();
@@ -142,6 +143,7 @@ public class XmlCleaner {
 					try {
 						reader.close();
 					} catch (IOException e) {
+						System.err.println("Error while closing reader");
 						e.printStackTrace();
 					}
 				}

@@ -337,6 +337,7 @@ public class Main {
 
 			}
 		} catch (ParseException e) {
+			System.err.println("Command line parse exception.");
 			e.printStackTrace();
 		}
 	}

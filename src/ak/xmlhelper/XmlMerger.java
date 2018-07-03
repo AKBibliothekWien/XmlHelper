@@ -257,13 +257,14 @@ public class XmlMerger {
 
 			isMergingSuccessful = true;
 
-		}catch (FileNotFoundException e) {
-			e.printStackTrace();
+		} catch (FileNotFoundException e) {
 			System.err.println("File not found: " + fileName);
+			e.printStackTrace();
 		} catch (IOException e) {
-			System.err.println("Error when parsing file: " + fileName);
+			System.err.println("IOException when processing file: " + fileName);
 			e.printStackTrace();
 		} catch (XMLStreamException e) {
+			System.err.println("XMLStreamException when streaming file: " + fileName);
 			e.printStackTrace();
 		}
 

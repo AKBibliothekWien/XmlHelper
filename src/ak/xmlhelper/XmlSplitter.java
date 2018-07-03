@@ -168,11 +168,14 @@ public class XmlSplitter {
 			}
 
 		} catch (FileNotFoundException e) {
+			System.err.println("File not found when trying to split XML file: " + sourceFile);
 			e.printStackTrace();
 		} catch (XMLStreamException e) {
+			System.err.println("XMLStreamException when trying to split XML file: " + sourceFile);
 			e.printStackTrace();
-		} catch (IOException e1) {
-			e1.printStackTrace();
+		} catch (IOException e) {
+			System.err.println("IOException when trying to split XML file: " + sourceFile);
+			e.printStackTrace();
 		}
 
 	}

@@ -82,8 +82,10 @@ public class XmlParser {
 					saxon.writeXdmValue(xdmValue, destination);
 				}
 			} catch (SaxonApiException e) {
+				System.err.println("SaxonApiException while parsing XML.");
 				e.printStackTrace();
 			} catch (ParserConfigurationException e) {
+				System.err.println("ParserConfigurationException while parsing XML.");
 				e.printStackTrace();
 			}
 		}
