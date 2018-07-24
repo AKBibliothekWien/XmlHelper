@@ -39,6 +39,7 @@ public class XmlSplitter {
 	}
 
 	public void split(String sourceFile, String nodeNametoExtract, int nodeCount, String condNodeForFilename, Map<String, String> condAttrsForFilename) {
+		
 		try {
 			FileInputStream fis = new FileInputStream(sourceFile);
 			BufferedInputStream bis = new BufferedInputStream(fis);
@@ -107,6 +108,7 @@ public class XmlSplitter {
 					if (counter >= nodeCount) {
 						// Write the text content
 						String textContent = xsr.getText();
+						
 						xswString.writeCharacters(textContent);
 						
 						// If we encounter the filename node, set the filename for the splitted XML file accordingly
@@ -121,15 +123,16 @@ public class XmlSplitter {
 					
 				case XMLStreamConstants.END_ELEMENT:
 					String localNameEnd = xsr.getLocalName();
-
+					
 					if (counter >= nodeCount) {
 						// Write the closing XML element
 						xswString.writeEndElement();
+						xswString.flush(); // Flush to free buffer/memory
 					}
 
 					if (localNameEnd.equals(nodeNametoExtract)) {
 						counter --;
-
+						
 						// We are at the end at the splitted element, so we write it to a file
 						if (counter == 0) {
 							fw = new FileWriter(fileName.toString());
@@ -139,7 +142,7 @@ public class XmlSplitter {
 							xswFile.flush();
 							fw.flush();
 							fileName = null;
-						} 
+						}
 					}
 
 					break;
@@ -152,7 +155,8 @@ public class XmlSplitter {
 				xswString.close();
 			}
 			if (xswFile != null) {
-				xswFile.close();
+				// Closing leads to XMLStreamException. That's why we only flush here to free buffer/memory.
+				xswFile.flush();
 			}
 			if (fw != null) {
 				fw.close();
