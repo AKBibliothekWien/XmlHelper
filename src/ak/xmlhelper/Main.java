@@ -1,9 +1,9 @@
 package ak.xmlhelper;
 
 import java.io.File;
-import java.io.FilenameFilter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,6 +16,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.commons.io.FileUtils;
 
 import ak.xmlhelper.classes.XmlField;
 
@@ -212,7 +213,8 @@ public class Main {
 				String conditionNodeForFilename = (splitArgs[3] != null) ? splitArgs[3] : null;
 				Map<String, String> conditionAttrsForFilename = new HashMap<String, String>();
 				String destinationDir = (splitArgs[5] != null) ? splitArgs[5] : null;
-				File[] filesToSplit = null;
+				List<File> filesToSplit = null;
+
 				if (strFileToSplit != null && nodeToExtractName != null && conditionNodeForFilename != null && destinationDir != null) {
 
 					XmlSplitter xmls = new XmlSplitter(destinationDir);
@@ -226,18 +228,11 @@ public class Main {
 
 					if (isDir) {
 						if (fileToSplit != null && fileToSplit.canRead()) {
+							// Get all xml-files recursively
+							filesToSplit = (List<File>)FileUtils.listFiles(fileToSplit, new String[] {"xml", "XML"}, true);
 
-							// Get a sorted list (by filename) of all XML files:
-							filesToSplit = fileToSplit.listFiles(new FilenameFilter() {
-								@Override
-								public boolean accept(File dir, String name) {
-									if(name.toLowerCase().endsWith(".xml")) {
-										return true;
-									}
-									return false;
-								}
-							});
-							Arrays.sort(filesToSplit);
+							// Sort XML files by name. Is oldest to newest when using timestamp as filename.
+							Collections.sort(filesToSplit);
 						}
 					}
 
@@ -254,14 +249,16 @@ public class Main {
 						}
 					}
 
-					if (isDir && filesToSplit.length > 0) {
+					if (isDir && !filesToSplit.isEmpty()) {
 						// Split XMLs. Files will be overwritten by newer files with same name:
+						int fileCounter = 0;
 						for (File fileForSplitting : filesToSplit) {
-							System.out.print("Splitting file " + fileForSplitting.getAbsolutePath() + "                                                        \n");
+							fileCounter++;
+							System.out.print("Splitting file " + fileCounter + " from " + filesToSplit.size() + ": " + fileForSplitting.getAbsolutePath() + "                                                        \n");
 							xmls.split(fileForSplitting.getAbsolutePath(), nodeToExtractName, nodeToExtractCount, conditionNodeForFilename, conditionAttrsForFilename);
 						}
 					} else if (!isDir){
-						System.out.print("Splitting file " + fileToSplit.getAbsolutePath() + "                                                        \n");
+						System.out.print("Splitting file 1 from 1: " + fileToSplit.getAbsolutePath() + "                                                        \n");
 						xmls.split(fileToSplit.getAbsolutePath(), nodeToExtractName, nodeToExtractCount, conditionNodeForFilename, conditionAttrsForFilename);
 					}
 				}
