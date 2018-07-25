@@ -50,8 +50,8 @@ public class Main {
 						+ "\n 3. Element level (for nested elements with same name. 1 for top (= first) level, 2 for second level, ...)"
 						+ "\n 4. New output XML file with merged elements"
 						+ "\n 5. Parent element in new XML file (e. g. collection)"
-						+ "\n 6. Optional: Parent attributes for parent element. Escape double-quotes and surround with double quotes when there are spaces (e. g. for collection: \"xmlns=\\\"http://www.loc.gov/MARC21/slim\\\" a:b=\\\"c\\\"\")"
-						+ "\n 7. Optional: Element attributes for merged elements. Escape double-quotes and surround with double quotes when there are spaces (e. g. for record: \"xmlns:marc=\\\"http://www.loc.gov/MARC21/slim\\\" a:b=\\\"c\\\"\")")
+						+ "\n 6. Optional: Parent attributes for parent element. Escape double-quotes and surround with double quotes when there are spaces. Format: (prefix [optional], namespaceURI [optional],) localName [mandatory], value [mandatory]"
+						+ "\n 7. Optional: Element attributes for merged elements. Escape double-quotes and surround with double quotes when there are spaces. Format: (prefix [optional], namespaceURI [optional],) localName [mandatory], value [mandatory]")
 				.hasArgs()
 				.numberOfArgs(7)
 				.optionalArg(true)
