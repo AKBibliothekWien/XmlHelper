@@ -25,6 +25,11 @@ public class XmlSplitter {
 	private String destinationDirectoryStr = null;
 
 
+	/**
+	 * Constructor of XmlSplitter
+	 * 
+	 * @param destinationDirectoryPath A String denoting the path to the destination directory of the splitted files.
+	 */
 	public XmlSplitter(String destinationDirectoryPath) {
 		// Create destination directory. If destinationDirectoryPath is null, we use temp directory of OS:
 		if (destinationDirectoryPath == null || destinationDirectoryPath.isEmpty()) {
@@ -38,10 +43,20 @@ public class XmlSplitter {
 		this.destinationDirectoryStr = this.destinationDirectory.getAbsolutePath() + File.separator;
 	}
 
-	public void split(String sourceFile, String nodeNametoExtract, int nodeCount, String condNodeForFilename, Map<String, String> condAttrsForFilename) {
-		
+
+	/**
+	 * Split an XML file.
+	 * 
+	 * @param sourceFileStr			String that denotes a path to an XML file that should be splitted
+	 * @param nodeNametoExtract		The node name at which the file should be splitted, e. g. "record"
+	 * @param nodeCount				The count or level of the node at which the file should be splitted if there is more than one. Starts with 1.
+	 * @param condNodeForFilename	Nodename condition for the file name, e. g. "controlfield"
+	 * @param condAttrsForFilename	Attribute of the node as condition for the filename, e. g. "tag=001"
+	 */
+	public void split(String sourceFileStr, String nodeNametoExtract, int nodeCount, String condNodeForFilename, Map<String, String> condAttrsForFilename) {
+
 		try {
-			FileInputStream fis = new FileInputStream(sourceFile);
+			FileInputStream fis = new FileInputStream(sourceFileStr);
 			BufferedInputStream bis = new BufferedInputStream(fis);
 			XMLInputFactory xif = XMLInputFactory.newInstance();
 			XMLOutputFactory xof = XMLOutputFactory.newInstance();
@@ -72,7 +87,7 @@ public class XmlSplitter {
 					}
 
 					if (counter >= nodeCount) {
-						
+
 						// Write the opening XML element
 						if (xswString != null) {
 							xswString.writeStartElement(localName);
@@ -86,7 +101,7 @@ public class XmlSplitter {
 								String attrName = xsr.getAttributeLocalName(i);
 								String attrValue = xsr.getAttributeValue(i);
 								xswString.writeAttribute(attrName, attrValue);
-								
+
 								// Check if we encounter the file namenode, optionally with given attributes
 								if (localName.equals(condNodeForFilename)) {
 									if (condAttrsForFilename != null && !condAttrsForFilename.isEmpty()) {
@@ -103,14 +118,14 @@ public class XmlSplitter {
 						}
 					}
 					break;
-					
+
 				case XMLStreamConstants.CHARACTERS:
 					if (counter >= nodeCount) {
 						// Write the text content
 						String textContent = xsr.getText();
-						
+
 						xswString.writeCharacters(textContent);
-						
+
 						// If we encounter the filename node, set the filename for the splitted XML file accordingly
 						if (isFileNameNode) {
 							fileName.append(this.destinationDirectoryStr);	
@@ -120,10 +135,10 @@ public class XmlSplitter {
 						}
 					}
 					break;
-					
+
 				case XMLStreamConstants.END_ELEMENT:
 					String localNameEnd = xsr.getLocalName();
-					
+
 					if (counter >= nodeCount) {
 						// Write the closing XML element
 						xswString.writeEndElement();
@@ -132,7 +147,7 @@ public class XmlSplitter {
 
 					if (localNameEnd.equals(nodeNametoExtract)) {
 						counter --;
-						
+
 						// We are at the end at the splitted element, so we write it to a file
 						if (counter == 0) {
 							fw = new FileWriter(fileName.toString());
@@ -144,13 +159,13 @@ public class XmlSplitter {
 							fileName = null;
 						}
 					}
-
 					break;
+
 				default:
 					break;
 				}
 			}
-			
+
 			if (xswString != null) {
 				xswString.close();
 			}
@@ -172,18 +187,22 @@ public class XmlSplitter {
 			}
 
 		} catch (FileNotFoundException e) {
-			System.err.println("File not found when trying to split XML file: " + sourceFile);
+			System.err.println("File not found when trying to split XML file: " + sourceFileStr);
 			e.printStackTrace();
 		} catch (XMLStreamException e) {
-			System.err.println("XMLStreamException when trying to split XML file: " + sourceFile);
+			System.err.println("XMLStreamException when trying to split XML file: " + sourceFileStr);
 			e.printStackTrace();
 		} catch (IOException e) {
-			System.err.println("IOException when trying to split XML file: " + sourceFile);
+			System.err.println("IOException when trying to split XML file: " + sourceFileStr);
 			e.printStackTrace();
 		}
-
 	}
-	
+
+
+	/**
+	 * Get the destination directory of the splitted files as java File object.
+	 * @return	File: destination directory of the splitted files as java File object
+	 */
 	public File getDestinationDirectory() {		
 		return this.destinationDirectory;
 	}
