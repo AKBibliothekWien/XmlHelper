@@ -52,15 +52,20 @@ public class XmlMerger {
 			}
 
 			// If we should write custom attributes to the merge node, get them now
+
 			List<CustomAttribute> customMergeNodeAttrs = null;
 			if (mergeNodeAttr != null && !mergeNodeAttr.isEmpty()) {
+
 				customMergeNodeAttrs = new ArrayList<CustomAttribute>();
 				String[] mergeNodeAttrSplitted = mergeNodeAttr.split("\\s*;\\s*");
+
 				for (String customMergeAttr : mergeNodeAttrSplitted) {
 					String[] customMergeAttrSplitted = customMergeAttr.split("\\s*,\\s*");
 					int customMergeAttrSplittedLength = customMergeAttrSplitted.length;
 					if (customMergeAttrSplittedLength >= 2 && customMergeAttrSplittedLength <= 4) {
+
 						CustomAttribute customMergeAttribute = new CustomAttribute();
+
 						customMergeAttribute.setNoOfParts(customMergeAttrSplittedLength);
 						customMergeAttribute.setLocalName(customMergeAttrSplitted[0]);
 						customMergeAttribute.setValue(customMergeAttrSplitted[1]);
@@ -75,14 +80,17 @@ public class XmlMerger {
 				}
 			}
 
+
 			// If we should write custom attributes to the parent node, get them now
 			List<CustomAttribute> customParentNodeAttrs = null;
 			if (parentNodeAttr != null && !parentNodeAttr.isEmpty()) {
 				customParentNodeAttrs = new ArrayList<CustomAttribute>();
 				String[] parentNodeAttrSplitted = parentNodeAttr.split("\\s*;\\s*");
 				for (String parentAttr : parentNodeAttrSplitted) {
+
 					String[] customParentAttrSplitted = parentAttr.split("\\s*,\\s*");
 					int customParentAttrSplittedLength = customParentAttrSplitted.length;
+
 					if (customParentAttrSplittedLength >= 2 && customParentAttrSplittedLength <= 4) {
 						CustomAttribute customParentAttribute = new CustomAttribute();
 						customParentAttribute.setNoOfParts(customParentAttrSplittedLength);
@@ -154,8 +162,10 @@ public class XmlMerger {
 					switch (e) {
 					case XMLStreamConstants.START_ELEMENT:
 
-						// Get the name of the current opening XML element
-						String localName = xsr.getLocalName();
+						// Get the name and namespaces of the current opening XML element
+						String localName = xsr.getName().getLocalPart();
+						String namespacePrefix = xsr.getName().getPrefix();
+						String namespaceUri = xsr.getName().getNamespaceURI();
 
 						// Check if the current opening XML element is the one that should be merged
 						if (localName.equals(mergeNode)) {
@@ -164,15 +174,29 @@ public class XmlMerger {
 
 						if (counter >= mergeNodeLevel) {
 
-							// Write the current opening XML element
-							xsw.writeStartElement(localName);
+							// Write the current opening XML element (with or without namespaces)
+							if (!namespacePrefix.isEmpty() && !namespaceUri.isEmpty()) {
+								xsw.writeStartElement(namespacePrefix, localName, namespaceUri);
+							} else {
+								xsw.writeStartElement(localName);
+							}
 
 							// Check if the current opening XML element has attributes
 							int noAttr = xsr.getAttributeCount();
 							if (noAttr > 0) {
+
 								// If we encounter attributes, write them to the opening XML element
 								for (int i = 0; i < noAttr; i++) {
-									xsw.writeAttribute(xsr.getAttributeLocalName(i), xsr.getAttributeValue(i));
+									String attrLocalName = xsr.getAttributeName(i).getLocalPart();
+									String attrNamespacePrefix = xsr.getAttributeName(i).getPrefix();
+									String attrNamespaceUri = xsr.getAttributeName(i).getNamespaceURI();
+									String attrValue = xsr.getAttributeValue(i);
+
+									if (!attrNamespacePrefix.isEmpty() && !attrNamespaceUri.isEmpty()) {
+										xsw.writeAttribute(attrNamespacePrefix, attrNamespaceUri, attrLocalName, attrValue);
+									} else {
+										xsw.writeAttribute(attrLocalName, attrValue);
+									}
 								}
 							}
 
