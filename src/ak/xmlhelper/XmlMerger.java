@@ -8,6 +8,7 @@ import java.io.FileWriter;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import javax.xml.stream.XMLInputFactory;
@@ -52,7 +53,6 @@ public class XmlMerger {
 			}
 
 			// If we should write custom attributes to the merge node, get them now
-
 			List<CustomAttribute> customMergeNodeAttrs = null;
 			if (mergeNodeAttr != null && !mergeNodeAttr.isEmpty()) {
 
